@@ -4,6 +4,7 @@ from extensions import db
 from models import User, Farmer, Buyer
 from routes.registration_routes import registration_blueprint
 from routes.admin_routes import admin_blueprint  # Import the admin blueprint
+from routes.farmer_routes import farmer_blueprint
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -21,3 +22,7 @@ with app.app_context():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+app.register_blueprint(farmer_blueprint, url_prefix='/farmer')

@@ -6,3 +6,5 @@ class Config:
     # MySQL Database Connection
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:bibaris@localhost/farmersmarket'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
