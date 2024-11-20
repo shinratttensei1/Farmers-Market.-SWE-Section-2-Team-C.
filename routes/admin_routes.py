@@ -67,30 +67,38 @@ admin_blueprint = Blueprint('admin', __name__)
 
 @admin_blueprint.route('/dashboard', methods=['GET'])
 def admin_dashboard():
-    """
-    Admin Dashboard: Displays pending farmers, registered farmers, and buyers.
-    """
+    # Check if admin is logged in
     if 'admin_user_id' not in session or session.get('admin_user_role') != 'Admin':
         flash('Unauthorized access. Please log in.', 'danger')
-        return redirect(url_for('admin.admin_login'))  # Redirect to login if not authenticated
+        return redirect(url_for('admin.admin_login'))
 
-    # Query pending, registered farmers, and buyers
+    # Fetch the admin details
+    admin_user = User.query.get(session['admin_user_id'])
+
+    # Query pending farmers
     pending_farmers = db.session.query(User, Farmer).filter(
         User.userID == Farmer.farmerID,
         User.isVerified == False
     ).all()
+
+    # Query registered farmers
     registered_farmers = db.session.query(User, Farmer).filter(
         User.userID == Farmer.farmerID,
         User.isVerified == True
     ).all()
-    all_buyers = User.query.filter_by(role='buyer').all()
 
+    # Query registered buyers
+    all_buyers = db.session.query(User, Buyer).join(Buyer, User.userID == Buyer.buyerID).all()
+
+    # Render the dashboard
     return render_template(
         'admin_dashboard.html',
+        admin_name=admin_user.name,
         pending_farmers=pending_farmers,
         registered_farmers=registered_farmers,
         all_buyers=all_buyers
     )
+
 
 
 

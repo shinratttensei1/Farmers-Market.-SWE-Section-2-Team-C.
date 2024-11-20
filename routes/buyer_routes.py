@@ -11,20 +11,18 @@ def register_buyer():
     data = request.json
     hashed_password = generate_password_hash(data['password'])
 
-    # Create user entry
     user = User(
         login=data['login'],
         email=data['email'],
         password=hashed_password,
         phonenumber=data['phonenumber'],
         role='buyer',
-        isVerified=True,  # Buyers don't need admin approval
+        isVerified=True,
         name=data['name']
     )
     db.session.add(user)
-    db.session.flush()  # Get user ID before committing
+    db.session.flush()
 
-    # Create buyer entry
     buyer = Buyer(
         buyerID=user.userID,
         deliveryAddress=data['deliveryAddress'],
