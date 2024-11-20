@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect, url_for
 from models import db, Farmer, User, Buyer, Farm
 
 admin_blueprint = Blueprint('admin', __name__)
@@ -157,3 +157,47 @@ def get_farms(farmer_id):
         return render_template('farmer_details.html', farmer=farmer, user=user, farms=farms)
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+
+@admin_blueprint.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
+def edit_user(user_id):
+    # Fetch the user
+    user = User.query.get(user_id)
+    if not user:
+        return "User not found", 404
+
+    # Fetch farmer or buyer details if applicable
+    farmer = Farmer.query.filter_by(farmerID=user_id).first()
+    buyer = Buyer.query.filter_by(buyerID=user_id).first()
+
+    if request.method == 'GET':
+        # Render the edit user page with role-specific details
+        return render_template('edit_user.html', user=user, farmer=farmer, buyer=buyer)
+
+    if request.method == 'POST':
+        try:
+            # Update general user details
+            user.name = request.form['name']
+            user.email = request.form['email']
+            user.phonenumber = request.form['phonenumber']
+
+            # Update farmer-specific details
+            if farmer:
+                farmer.profilePicture = request.form.get('profilePicture', farmer.profilePicture)
+                farmer.resources = request.form.get('resources', farmer.resources)
+                farmer.rating = request.form.get('rating', farmer.rating)
+
+            # Update buyer-specific details
+            if buyer:
+                buyer.deliveryAddress = request.form.get('deliveryAddress', buyer.deliveryAddress)
+                buyer.paymentMethod = request.form.get('paymentMethod', buyer.paymentMethod)
+
+            db.session.commit()
+            return redirect(url_for('admin.admin_dashboard'))
+
+        except Exception as e:
+            print(f"Error while updating user: {e}")
+            db.session.rollback()
+            return "An error occurred while updating user details", 500
+
+
