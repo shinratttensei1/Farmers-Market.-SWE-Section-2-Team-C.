@@ -4,14 +4,7 @@ import "../global.css"
 
 import { icons } from '../../constants'
 
-interface TabIconProps {
-  icon: ImageSourcePropType; // Type for image source
-  color: string; // Tab icon color
-  name: string; // Tab name
-  focused: boolean; // Is the tab currently focused
-}
-
-const TabIcon = ({ icon, color, name, focused }: TabIconProps) => {
+const TabIcon = ({ icon, color, name, focused }) => {
     return (
         <View className='items-center justify-bottom gap-2'>
           <Image
@@ -19,8 +12,8 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => {
           tintColor={color}
           style={{
             resizeMode: 'center',
-            // width: 5,
-            // height: 5,
+            width: 30,
+            height: 30,
           }}
           />
             <Text className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs text-zinc`}>
@@ -51,7 +44,7 @@ const TabsLayout = () => {
           options={{
             title: 'Crops',
             headerShown: false,
-            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+            tabBarIcon: ({ color, focused }) => (
               <TabIcon
                   icon={icons.crops}
                   color={color}
@@ -66,7 +59,7 @@ const TabsLayout = () => {
           options={{
             title: 'Profile',
             headerShown: false,
-            tabBarIcon: ({ color, focused }: { color: string; focused: boolean }) => (
+            tabBarIcon: ({ color, focused }) => (
               <TabIcon
                   icon={icons.profile}
                   color={color}

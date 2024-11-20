@@ -5,16 +5,16 @@ import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 
 import { images } from "../../constants";
 import { CustomButton, FormField } from "../../components";
-// import { getCurrentUser, signIn } from "../../lib/appwrite";
-// import { useGlobalContext } from "../../context/GlobalProvider";
+import { getCurrentUser, signIn } from "../../lib/appwrite";
+import { useGlobalContext } from "../../context/GlobalProvider";
 
 const SignIn = () => {
   // const { setUser, setIsLogged } = useGlobalContext();
-  // const [isSubmitting, setSubmitting] = useState(false);
-  // const [form, setForm] = useState({
-  //   email: "",
-  //   password: "",
-  // });
+  const [isSubmitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    login: "",
+    password: "",
+  });
 
   // const submit = async () => {
   //   if (form.email === "" || form.password === "") {
@@ -39,7 +39,9 @@ const SignIn = () => {
   // };
 
   return (
-    <SafeAreaView style={{ backgroundColor: "#97886b", height: "100%" }}>
+    <SafeAreaView
+      className="bg-black-200 h-full"
+    >
       <ScrollView>
         <View
           style={{
@@ -65,16 +67,16 @@ const SignIn = () => {
               fontFamily: "Poppins-SemiBold",
             }}
           >
-            Log in to bazaar
+            Log in to <u>bazaar</u>
           </Text>
 
           <FormField
             className="text-black-300"
-            title="Email"
-            // value={form.email}
+            title="Login"
+            // value={form.login}
             // handleChangeText={(e) => setForm({ ...form, email: e })}
             otherStyles="mt-7"
-            keyboardType="email-address"
+            // keyboardType="email-address"
           />
 
           <FormField
@@ -100,7 +102,7 @@ const SignIn = () => {
             }}
           >
             <Text
-              className="text-secondary"
+              className="text-gray-100"
               style={{
                 fontSize: 16,
                 fontFamily: "Poppins-Regular",
@@ -109,10 +111,10 @@ const SignIn = () => {
               Don't have an account?
             </Text>
             <Link
-              href="/sign-up"
+              href="/sign_up"
               className='text-black-300'
               style={{
-                fontSize: 16,
+                fontSize: 18,
                 fontWeight: "600",
                 fontFamily: "Poppins-SemiBold",
               }}
