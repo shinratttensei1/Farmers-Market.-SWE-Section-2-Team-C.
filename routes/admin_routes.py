@@ -67,19 +67,22 @@ admin_blueprint = Blueprint('admin', __name__)
 
 @admin_blueprint.route('/dashboard', methods=['GET'])
 def admin_dashboard():
-    # Query for unverified farmers (pending approval)
+    """
+    Admin Dashboard: Displays pending farmers, registered farmers, and buyers.
+    """
+    if 'admin_user_id' not in session or session.get('admin_user_role') != 'Admin':
+        flash('Unauthorized access. Please log in.', 'danger')
+        return redirect(url_for('admin.admin_login'))  # Redirect to login if not authenticated
+
+    # Query pending, registered farmers, and buyers
     pending_farmers = db.session.query(User, Farmer).filter(
         User.userID == Farmer.farmerID,
         User.isVerified == False
     ).all()
-
-    # Query for all verified farmers
     registered_farmers = db.session.query(User, Farmer).filter(
         User.userID == Farmer.farmerID,
         User.isVerified == True
     ).all()
-
-    # Query for all buyers (optional, for informational purposes)
     all_buyers = User.query.filter_by(role='buyer').all()
 
     return render_template(
@@ -88,6 +91,7 @@ def admin_dashboard():
         registered_farmers=registered_farmers,
         all_buyers=all_buyers
     )
+
 
 
 @admin_blueprint.route('/approve-user/<int:user_id>', methods=['PUT'])
@@ -200,4 +204,39 @@ def edit_user(user_id):
             db.session.rollback()
             return "An error occurred while updating user details", 500
 
+
+from flask import session, flash  # Ensure these imports are present
+
+@admin_blueprint.route('/login', methods=['GET', 'POST'])
+def admin_login():
+    """
+    Admin Login: Allows an admin to log in to the dashboard.
+    """
+    if request.method == 'POST':
+        # Get email and password from form
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        # Query for admin user
+        admin_user = User.query.filter_by(email=email, role='Admin').first()
+
+        if admin_user and admin_user.password == password:  # Direct password match
+            session['admin_user_id'] = admin_user.userID
+            session['admin_user_role'] = admin_user.role
+            flash('Login successful!', 'success')
+            return redirect(url_for('admin.admin_dashboard'))  # Redirect to dashboard
+        else:
+            flash('Invalid email or password. Please try again.', 'danger')
+
+    # Render login page for GET requests
+    return render_template('admin_login.html')
+
+@admin_blueprint.route('/logout', methods=['GET'])
+def admin_logout():
+    """
+    Admin Logout: Clears the session and redirects to login.
+    """
+    session.clear()  # Clear session data
+    flash('Logged out successfully.', 'info')
+    return redirect(url_for('admin.admin_login'))
 
