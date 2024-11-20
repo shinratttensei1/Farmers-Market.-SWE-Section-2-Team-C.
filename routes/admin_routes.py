@@ -80,7 +80,12 @@ def admin_dashboard():
     ).all()
 
     # Query for all buyers (optional, for informational purposes)
-    all_buyers = User.query.filter_by(role='buyer').all()
+    all_buyers = (
+        db.session.query(User, Buyer)
+        .join(Buyer, User.userID == Buyer.buyerID)
+        .filter(User.role == 'buyer')
+        .all()
+    )
 
     return render_template(
         'admin_dashboard.html',
