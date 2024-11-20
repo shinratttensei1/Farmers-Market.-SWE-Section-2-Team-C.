@@ -60,7 +60,7 @@
         <label for="phonenumber">Phone Number:</label>
         <input type="text" id="phonenumber" name="phonenumber" value="{{ user.phonenumber }}" required>
 
-        <!-- Farmer-specific fields -->
+
         {% if farmer %}
             <h3>Farmer Details</h3>
             <label for="profilePicture">Profile Picture URL:</label>
@@ -73,7 +73,7 @@
             <input type="number" id="rating" name="rating" step="0.1" value="{{ farmer.rating }}">
         {% endif %}
 
-        <!-- Buyer-specific fields -->
+
         {% if buyer %}
             <h3>Buyer Details</h3>
             <label for="deliveryAddress">Delivery Address:</label>

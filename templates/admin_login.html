@@ -87,7 +87,7 @@
     <div class="login-container">
         <h1>Admin Login</h1>
 
-        <!-- Display Flash Messages -->
+
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -96,7 +96,7 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Login Form -->
+
         <form method="POST">
             <div class="form-group">
                 <label for="email">Email:</label>

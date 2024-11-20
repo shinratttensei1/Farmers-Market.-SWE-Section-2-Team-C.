@@ -67,19 +67,16 @@ admin_blueprint = Blueprint('admin', __name__)
 
 @admin_blueprint.route('/dashboard', methods=['GET'])
 def admin_dashboard():
-    # Query for unverified farmers (pending approval)
     pending_farmers = db.session.query(User, Farmer).filter(
         User.userID == Farmer.farmerID,
         User.isVerified == False
     ).all()
 
-    # Query for all verified farmers
     registered_farmers = db.session.query(User, Farmer).filter(
         User.userID == Farmer.farmerID,
         User.isVerified == True
     ).all()
 
-    # Query for all buyers (optional, for informational purposes)
     all_buyers = (
         db.session.query(User, Buyer)
         .join(Buyer, User.userID == Buyer.buyerID)
@@ -112,7 +109,7 @@ def reject_user(user_id):
     if not user or user.role != 'farmer':
         return jsonify({"error": "User not found or invalid role"}), 404
 
-    # Delete related farmer entry if exists
+
     farmer = Farmer.query.filter_by(farmerID=user.userID).first()
     if farmer:
         db.session.delete(farmer)
@@ -123,24 +120,20 @@ def reject_user(user_id):
 
 @admin_blueprint.route('/delete-user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
-    # Fetch the user
     user = User.query.get(user_id)
     if not user:
         return jsonify({"error": "User not found"}), 404
 
-    # If the user is a farmer, delete the farmer entry
     if user.role == 'farmer':
         farmer = Farmer.query.filter_by(farmerID=user.userID).first()
         if farmer:
             db.session.delete(farmer)
 
-    # If the user is a buyer, delete the buyer entry
     if user.role == 'buyer':
         buyer = Buyer.query.filter_by(buyerID=user.userID).first()
         if buyer:
             db.session.delete(buyer)
 
-    # Delete the user
     db.session.delete(user)
     db.session.commit()
 
@@ -149,16 +142,13 @@ def delete_user(user_id):
 @admin_blueprint.route('/farms/<int:farmer_id>', methods=['GET'])
 def get_farms(farmer_id):
     try:
-        # Fetch farmer details
         farmer = Farmer.query.get(farmer_id)
         user = User.query.get(farmer_id)  # Assuming Farmer has the same userID as in the User table
         if not farmer or not user:
             return "Farmer not found", 404
 
-        # Fetch farms for the farmer
         farms = Farm.query.filter_by(farmerID=farmer_id).all()
 
-        # Render the details in a new template
         return render_template('farmer_details.html', farmer=farmer, user=user, farms=farms)
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
@@ -166,33 +156,27 @@ def get_farms(farmer_id):
 
 @admin_blueprint.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
 def edit_user(user_id):
-    # Fetch the user
     user = User.query.get(user_id)
     if not user:
         return "User not found", 404
 
-    # Fetch farmer or buyer details if applicable
     farmer = Farmer.query.filter_by(farmerID=user_id).first()
     buyer = Buyer.query.filter_by(buyerID=user_id).first()
 
     if request.method == 'GET':
-        # Render the edit user page with role-specific details
         return render_template('edit_user.html', user=user, farmer=farmer, buyer=buyer)
 
     if request.method == 'POST':
         try:
-            # Update general user details
             user.name = request.form['name']
             user.email = request.form['email']
             user.phonenumber = request.form['phonenumber']
 
-            # Update farmer-specific details
             if farmer:
                 farmer.profilePicture = request.form.get('profilePicture', farmer.profilePicture)
                 farmer.resources = request.form.get('resources', farmer.resources)
                 farmer.rating = request.form.get('rating', farmer.rating)
 
-            # Update buyer-specific details
             if buyer:
                 buyer.deliveryAddress = request.form.get('deliveryAddress', buyer.deliveryAddress)
                 buyer.paymentMethod = request.form.get('paymentMethod', buyer.paymentMethod)

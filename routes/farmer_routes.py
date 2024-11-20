@@ -11,7 +11,6 @@ def register_farmer():
     data = request.json
     hashed_password = generate_password_hash(data['password'])
 
-    # Create user entry
     user = User(
         login=data['login'],
         email=data['email'],
@@ -22,15 +21,15 @@ def register_farmer():
         name=data['name']
     )
     db.session.add(user)
-    db.session.flush()  # Get user ID before committing
+    db.session.flush()
 
-    # Create farmer entry
+
     farmer = Farmer(
         farmerID=user.userID,
         govermentIssuedID=data['govermentIssuedID'],
         profilePicture=data['profilePicture'],
         resources=data['resources'],
-        rating=0.0  # Default rating
+        rating=0.0
     )
     db.session.add(farmer)
     db.session.commit()
@@ -82,17 +81,14 @@ def delete_product(productID):
 
 @farmer_blueprint.route('/add-farm/<int:farmer_id>', methods=['POST'])
 def add_farm_to_farmer(farmer_id):
-    # Check if the farmer exists
     farmer = Farmer.query.get(farmer_id)
     if not farmer:
         return jsonify({"error": "Farmer not found"}), 404
 
-    # Validate the request body
     data = request.get_json()
     if not data or not all(key in data for key in ['farmAddress', 'typesOfCrops', 'farmSize']):
         return jsonify({"error": "Invalid input, please provide all required fields"}), 400
 
-    # Create a new farm
     new_farm = Farm(
         farmerID=farmer_id,
         farmAddress=data['farmAddress'],
@@ -100,7 +96,6 @@ def add_farm_to_farmer(farmer_id):
         farmSize=data['farmSize']
     )
 
-    # Save the farm to the database
     db.session.add(new_farm)
     db.session.commit()
 

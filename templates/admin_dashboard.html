@@ -65,7 +65,7 @@
 <body>
     <h1>Admin Dashboard</h1>
 
-    <!-- Pending Farmers Section -->
+
     <h2>Pending Farmers</h2>
     <table>
         <thead>
@@ -98,7 +98,7 @@
         </tbody>
     </table>
 
-    <!-- Registered Farmers Section -->
+
     <h2>Registered Farmers</h2>
     <table>
         <thead>
@@ -122,7 +122,6 @@
                 <td>{{ farmer.resources }}</td>
                 <td>{{ farmer.rating }}</td>
                 <td class="action-buttons">
-                    <!-- Update "View Farms" to link to a new page -->
                     <a href="/admin/farms/{{ user.userID }}">View Farms</a>
                     <a href="/admin/edit-user/{{ user.userID }}">Edit</a>
                     <a onclick="handleAction('delete', {{ user.userID }}, '{{ user.name }}', 'registered-farmer-{{ user.userID }}')">Delete</a>
@@ -132,7 +131,6 @@
         </tbody>
     </table>
 
-    <!-- Registered Buyers Section -->
     <h2>Registered Buyers</h2>
     <table>
         <thead>
