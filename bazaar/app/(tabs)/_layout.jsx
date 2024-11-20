@@ -18,9 +18,9 @@ const TabIcon = ({ icon, color, name, focused }: TabIconProps) => {
           source={icon}
           tintColor={color}
           style={{
-            resizeMode: 'contain',
-            width: 30,
-            height: 30,
+            resizeMode: 'center',
+            // width: 5,
+            // height: 5,
           }}
           />
             <Text className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs text-zinc`}>
