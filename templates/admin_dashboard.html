@@ -1,10 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        .action-buttons a {
+            margin-right: 10px;
+            text-decoration: none;
+            color: #007bff;
+            cursor: pointer;
+        }
+
+        .action-buttons a:hover {
+            text-decoration: underline;
+        }
+
+        img {
+            max-width: 100px;
+            height: auto;
+        }
+    </style>
+    <script>
+        async function handleAction(action, userId, name, rowId) {
+            const confirmAction = confirm(`Are you sure you want to ${action} ${name}?`);
+            if (!confirmAction) return;
+
+            const url = `/admin/${action}-user/${userId}`;
+            const method = action === 'approve' ? 'PUT' : 'DELETE';
+
+            try {
+                const response = await fetch(url, { method });
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(data.msg);
+                    // Remove the row from the table
+                    document.getElementById(rowId).remove();
+                } else {
+                    alert(data.error || 'An error occurred');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred. Please try again.');
+            }
+        }
+    </script>
 </head>
 <body>
-$END$
+    <h1>Admin Dashboard</h1>
+
+    <!-- Pending Farmers Section -->
+    <h2>Pending Farmers</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Profile Picture</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Resources</th>
+                <th>Rating</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user, farmer in pending_farmers %}
+            <tr id="farmer-{{ user.userID }}">
+                <td><img src="{{ farmer.profilePicture }}" alt="Profile Picture"></td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.phonenumber }}</td>
+                <td>{{ farmer.resources }}</td>
+                <td>{{ farmer.rating }}</td>
+                <td class="action-buttons">
+                    <a onclick="handleAction('approve', {{ user.userID }}, '{{ user.name }}', 'farmer-{{ user.userID }}')">Approve</a>
+                    <a onclick="handleAction('reject', {{ user.userID }}, '{{ user.name }}', 'farmer-{{ user.userID }}')">Reject</a>
+                    <a onclick="handleAction('delete', {{ user.userID }}, '{{ user.name }}', 'farmer-{{ user.userID }}')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Registered Farmers Section -->
+    <h2>Registered Farmers</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Profile Picture</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Resources</th>
+                <th>Rating</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user, farmer in registered_farmers %}
+            <tr id="registered-farmer-{{ user.userID }}">
+                <td><img src="{{ farmer.profilePicture }}" alt="Profile Picture"></td>
+                <td>{{ user.name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.phonenumber }}</td>
+                <td>{{ farmer.resources }}</td>
+                <td>{{ farmer.rating }}</td>
+                <td class="action-buttons">
+                    <a onclick="handleAction('delete', {{ user.userID }}, '{{ user.name }}', 'registered-farmer-{{ user.userID }}')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Registered Buyers Section -->
+    <h2>Registered Buyers</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for buyer in all_buyers %}
+            <tr id="buyer-{{ buyer.userID }}">
+                <td>{{ buyer.name }}</td>
+                <td>{{ buyer.email }}</td>
+                <td>{{ buyer.phonenumber }}</td>
+                <td class="action-buttons">
+                    <a onclick="handleAction('delete', {{ buyer.userID }}, '{{ buyer.name }}', 'buyer-{{ buyer.userID }}')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </body>
 </html>

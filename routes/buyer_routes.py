@@ -33,3 +33,34 @@ def register_buyer():
     db.session.add(buyer)
     db.session.commit()
     return jsonify({"msg": "Buyer registered successfully!"}), 201
+
+
+from models import Product, Farmer
+
+@buyer_blueprint.route('/products', methods=['GET'])
+def get_products():
+    category = request.args.get('category')
+    min_price = request.args.get('min_price', type=float)
+    max_price = request.args.get('max_price', type=float)
+
+    query = Product.query
+    if category:
+        query = query.filter_by(category=category)
+    if min_price is not None:
+        query = query.filter(Product.price >= min_price)
+    if max_price is not None:
+        query = query.filter(Product.price <= max_price)
+
+    products = query.all()
+    response = []
+    for product in products:
+        response.append({
+            "productID": product.productID,
+            "name": product.name,
+            "category": product.category,
+            "price": product.price,
+            "quantity": product.quantity,
+            "description": product.description,
+            "images": product.images,
+        })
+    return jsonify(response), 200
