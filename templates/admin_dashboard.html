@@ -51,7 +51,6 @@
 
                 if (response.ok) {
                     alert(data.msg);
-                    // Remove the row from the table
                     document.getElementById(rowId).remove();
                 } else {
                     alert(data.error || 'An error occurred');
@@ -59,6 +58,29 @@
             } catch (error) {
                 console.error(error);
                 alert('An error occurred. Please try again.');
+            }
+        }
+
+        async function viewFarms(farmerId, farmerName) {
+            try {
+                const response = await fetch(`/admin/farms/${farmerId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    let farmList = data.farms.map(farm => `
+                        <li>
+                            <strong>Address:</strong> ${farm.farmAddress},
+                            <strong>Size:</strong> ${farm.farmSize} acres,
+                            <strong>Crops:</strong> ${farm.typesOfCrops}
+                        </li>`).join('');
+
+                    alert(`Farms for ${farmerName}:\n\n${farmList}`);
+                } else {
+                    alert(data.error || 'Failed to fetch farms.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('An error occurred while fetching farms.');
             }
         }
     </script>
@@ -123,6 +145,7 @@
                 <td>{{ farmer.resources }}</td>
                 <td>{{ farmer.rating }}</td>
                 <td class="action-buttons">
+                    <a onclick="viewFarms({{ user.userID }}, '{{ user.name }}')">View Farms</a>
                     <a onclick="handleAction('delete', {{ user.userID }}, '{{ user.name }}', 'registered-farmer-{{ user.userID }}')">Delete</a>
                 </td>
             </tr>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ user.name }} - Farms</title>
+    <title>{{ user.name }} - Farm Details</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -58,7 +58,7 @@
 </head>
 <body>
     <a href="/admin/dashboard" class="back-button">Back to Dashboard</a>
-    <h1>{{ user.name }} - Farms</h1>
+    <h1>Farmer: {{ user.name }}</h1>
 
     <div class="farmer-info">
         <p><strong>Email:</strong> {{ user.email }}</p>
@@ -67,4 +67,36 @@
         <p><strong>Rating:</strong> {{ farmer.rating }}</p>
     </div>
 
-    <h2
+    <h2>Farms</h2>
+    {% if farms %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Farm Address</th>
+                    <th>Types of Crops</th>
+                    <th>Farm Size (Acres)</th>
+                    <th>Image</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for farm in farms %}
+                <tr>
+                    <td>{{ farm.farmAddress }}</td>
+                    <td>{{ farm.typesOfCrops }}</td>
+                    <td>{{ farm.farmSize }}</td>
+                    <td>
+                        {% if farm.farmImage %}
+                            <img src="{{ farm.farmImage }}" alt="Farm Image">
+                        {% else %}
+                            <p>No image available</p>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No farms available for this farmer.</p>
+    {% endif %}
+</body>
+</html>

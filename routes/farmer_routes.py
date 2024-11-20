@@ -1,7 +1,7 @@
 # routes/farmer_routes.py
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash
-from models import db, User, Farmer
+from models import db, User, Farmer, Farm
 
 farmer_blueprint = Blueprint('farmer', __name__)
 
@@ -79,3 +79,29 @@ def delete_product(productID):
     db.session.delete(product)
     db.session.commit()
     return jsonify({"msg": "Product deleted successfully!"}), 200
+
+@farmer_blueprint.route('/add-farm/<int:farmer_id>', methods=['POST'])
+def add_farm_to_farmer(farmer_id):
+    # Check if the farmer exists
+    farmer = Farmer.query.get(farmer_id)
+    if not farmer:
+        return jsonify({"error": "Farmer not found"}), 404
+
+    # Validate the request body
+    data = request.get_json()
+    if not data or not all(key in data for key in ['farmAddress', 'typesOfCrops', 'farmSize']):
+        return jsonify({"error": "Invalid input, please provide all required fields"}), 400
+
+    # Create a new farm
+    new_farm = Farm(
+        farmerID=farmer_id,
+        farmAddress=data['farmAddress'],
+        typesOfCrops=data['typesOfCrops'],
+        farmSize=data['farmSize']
+    )
+
+    # Save the farm to the database
+    db.session.add(new_farm)
+    db.session.commit()
+
+    return jsonify({"msg": f"Farm created successfully for Farmer ID {farmer_id}!", "farmID": new_farm.farmID}), 201
