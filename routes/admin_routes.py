@@ -141,20 +141,19 @@ def delete_user(user_id):
 
     return jsonify({"msg": f"User '{user.name}' deleted successfully!"}), 200
 
-@admin_blueprint.route('/admin/farms/<int:farmer_id>', methods=['GET'])
+@admin_blueprint.route('/farms/<int:farmer_id>', methods=['GET'])
 def get_farms(farmer_id):
     try:
-        # Fetch farmer and user details
+        # Fetch farmer details
         farmer = Farmer.query.get(farmer_id)
-        user = User.query.get(farmer_id)  # Assuming Farmer and User share the same ID
+        user = User.query.get(farmer_id)  # Assuming Farmer has the same userID as in the User table
         if not farmer or not user:
-            return render_template('error.html', message="Farmer not found"), 404
+            return "Farmer not found", 404
 
         # Fetch farms for the farmer
         farms = Farm.query.filter_by(farmerID=farmer_id).all()
 
-        # Render the farmer details page with farms
+        # Render the details in a new template
         return render_template('farmer_details.html', farmer=farmer, user=user, farms=farms)
     except Exception as e:
-        logging.error(f"Error occurred for farmer ID {farmer_id}: {e}")
-        return render_template('error.html', message="An unexpected error occurred."), 500
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500

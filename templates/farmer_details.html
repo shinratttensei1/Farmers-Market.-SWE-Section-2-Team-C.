@@ -2,101 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ user.name }} - Farm Details</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th, td {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-
-        img {
-            max-width: 200px;
-            height: auto;
-            margin: 10px 0;
-        }
-
-        .farmer-info {
-            margin-bottom: 20px;
-        }
-
-        .farmer-info p {
-            margin: 5px 0;
-        }
-
-        .back-button {
-            margin-bottom: 20px;
-            display: inline-block;
-            padding: 10px 15px;
-            text-decoration: none;
-            background-color: #007bff;
-            color: #fff;
-            border-radius: 5px;
-        }
-
-        .back-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>{{ user.name }} - Farms</title>
 </head>
 <body>
-    <a href="/admin/dashboard" class="back-button">Back to Dashboard</a>
-    <h1>Farmer: {{ user.name }}</h1>
-
-    <div class="farmer-info">
-        <p><strong>Email:</strong> {{ user.email }}</p>
-        <p><strong>Phone:</strong> {{ user.phonenumber }}</p>
-        <p><strong>Resources:</strong> {{ farmer.resources }}</p>
-        <p><strong>Rating:</strong> {{ farmer.rating }}</p>
-    </div>
+    <h1>{{ user.name }}'s Farms</h1>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Phone:</strong> {{ user.phonenumber }}</p>
 
     <h2>Farms</h2>
     {% if farms %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Farm Address</th>
-                    <th>Types of Crops</th>
-                    <th>Farm Size (Acres)</th>
-                    <th>Image</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for farm in farms %}
-                <tr>
-                    <td>{{ farm.farmAddress }}</td>
-                    <td>{{ farm.typesOfCrops }}</td>
-                    <td>{{ farm.farmSize }}</td>
-                    <td>
-                        {% if farm.farmImage %}
-                            <img src="{{ farm.farmImage }}" alt="Farm Image">
-                        {% else %}
-                            <p>No image available</p>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <ul>
+            {% for farm in farms %}
+            <li>
+                <p><strong>Address:</strong> {{ farm.farmAddress }}</p>
+                <p><strong>Crops:</strong> {{ farm.typesOfCrops }}</p>
+                <p><strong>Size:</strong> {{ farm.farmSize }} acres</p>
+            </li>
+            {% endfor %}
+        </ul>
     {% else %}
-        <p>No farms available for this farmer.</p>
+        <p>No farms found.</p>
     {% endif %}
 </body>
 </html>
