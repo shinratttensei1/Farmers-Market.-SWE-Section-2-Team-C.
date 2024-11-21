@@ -28,8 +28,8 @@ export default function App() {
             source={images.bazaar_logo}
             style={{
               resizeMode: "contain",
-              width: 250,
-              height: 250,
+              width: 350,
+              height: 150,
             }}
           />
 
@@ -59,7 +59,7 @@ export default function App() {
                 color: "#3f3a36",
                 fontFamily: "Afacad-Regular",
                 fontStyle: "italic",
-                fontSize: 30 }}>Bazaar</Text>
+                fontSize: 30 }}><u>Bazaar</u></Text>
             </Text>
 
             {/* <Image
@@ -88,7 +88,7 @@ export default function App() {
           </Text>
 
           <CustomButton
-            title="Bazaru net"
+            title="Let's Go!"
             handlePress={() => router.push("../sign_in")}
             containerStyles="w-full mt-7"
           />

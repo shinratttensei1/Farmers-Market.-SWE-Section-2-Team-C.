@@ -3,20 +3,22 @@ from config import Config
 from extensions import db
 from models import User, Farmer, Buyer
 from routes.registration_routes import registration_blueprint
-from routes.admin_routes import admin_blueprint  # Import the admin blueprint
+from routes.admin_routes import admin_blueprint
 from routes.farmer_routes import farmer_blueprint
+from routes.buyer_routes import buyer_blueprint
+from routes.login_routes import login_blueprint
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_object(Config)
 
-# Initialize extensions
 db.init_app(app)
 
-# Register blueprints
+app.register_blueprint(login_blueprint, url_prefix='/auth')
 app.register_blueprint(registration_blueprint, url_prefix='/auth')
 app.register_blueprint(admin_blueprint, url_prefix='/admin')
 
-# Create database tables (for testing purposes only)
 with app.app_context():
     db.create_all()
 
@@ -24,5 +26,5 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-
 app.register_blueprint(farmer_blueprint, url_prefix='/farmer')
+app.register_blueprint(buyer_blueprint, url_prefix='/buyer')
