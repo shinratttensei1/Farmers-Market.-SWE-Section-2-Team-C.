@@ -273,3 +273,5 @@ def enable_user(user_id):
     db.session.commit()
 
     return jsonify({"msg": f"User '{user.name}' has been enabled."}), 200
+
+
