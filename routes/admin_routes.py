@@ -248,3 +248,28 @@ def admin_logout():
     flash('Logged out successfully.', 'info')
     return redirect(url_for('admin.admin_login'))
 
+@admin_blueprint.route('/disable-user/<int:user_id>', methods=['PUT'])
+def disable_user(user_id):
+    # Fetch the user by ID
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Set isVerified to 0 (disabled)
+    user.isVerified = False
+    db.session.commit()
+
+    return jsonify({"msg": f"User '{user.name}' has been disabled."}), 200
+
+@admin_blueprint.route('/enable-user/<int:user_id>', methods=['PUT'])
+def enable_user(user_id):
+    # Fetch the user by ID
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    # Set isVerified to 1 (enabled)
+    user.isVerified = True
+    db.session.commit()
+
+    return jsonify({"msg": f"User '{user.name}' has been enabled."}), 200

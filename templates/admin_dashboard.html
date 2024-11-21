@@ -67,7 +67,7 @@
             if (!confirmAction) return;
 
             const url = `/admin/${action}-user/${userId}`;
-            const method = action === 'approve' ? 'PUT' : 'DELETE';
+            const method = action === 'enable' || action === 'disable' ? 'PUT' : 'DELETE';
 
             try {
                 const response = await fetch(url, { method });
@@ -75,7 +75,7 @@
 
                 if (response.ok) {
                     alert(data.msg);
-                    document.getElementById(rowId).remove();
+                    location.reload(); // Reload page to reflect changes
                 } else {
                     alert(data.error || 'An error occurred');
                 }
@@ -185,8 +185,13 @@
                 <td>{{ buyer.deliveryAddress or 'N/A' }}</td>
                 <td>{{ buyer.paymentMethod or 'N/A' }}</td>
                 <td class="action-buttons">
+                    {% if user.isVerified %}
+                        <a onclick="handleAction('disable', {{ user.userID }}, '{{ user.name }}')">Disable</a>
+                    {% else %}
+                        <a onclick="handleAction('enable', {{ user.userID }}, '{{ user.name }}')">Enable</a>
+                    {% endif %}
                     <a href="/admin/edit-user/{{ user.userID }}">Edit</a>
-                    <a onclick="handleAction('delete', {{ user.userID }}, '{{ user.name }}', 'buyer-{{ user.userID }}')">Delete</a>
+                    <a onclick="handleAction('delete', {{ user.userID }}, '{{ user.name }}')">Delete</a>
                 </td>
             </tr>
             {% endfor %}
