@@ -92,6 +92,12 @@ export default function App() {
             handlePress={() => router.push("../sign_in")}
             containerStyles="w-full mt-7"
           />
+           {/* Button to Skip Authentication */}
+           <CustomButton
+            title="Skip to Main Page"
+            handlePress={() => router.push("../postAuth/mainpage")}
+            containerStyles="w-full mt-3"
+          />
         </View>
       </ScrollView>
     </SafeAreaView>
