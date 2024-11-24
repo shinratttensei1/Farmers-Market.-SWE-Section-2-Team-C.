@@ -7,10 +7,8 @@ login_blueprint = Blueprint('login', __name__)
 @login_blueprint.route('/app/login', methods=['POST'])
 def login_app():
     try:
-        # Parse JSON payload from the request
         data = request.json
-        
-        # Validate input
+
         if 'login' not in data or 'password' not in data:
             return jsonify({"error": "Missing 'login' or 'password'"}), 400
         
@@ -23,10 +21,17 @@ def login_app():
             session['user_id'] = user.userID
             session['role'] = user.role
             flash('User login successful!', 'success')
-            return redirect(url_for('admin.admin_dashboard'))
+            return jsonify({
+                "msg": "Login successful!",
+                "user": {
+                    "userID": user.userID,
+                    "name": user.name,
+                    "email": user.email,
+                    "role": user.role
+                }
+            }), 200
         else:
             return jsonify({"error": "Invalid login or password"}), 401
-
     except Exception as e:
         print(f"Error during login: {e}")
         return jsonify({"error": "Something went wrong"}), 500

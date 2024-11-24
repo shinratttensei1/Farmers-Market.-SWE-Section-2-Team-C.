@@ -16,7 +16,7 @@ const SignIn = () => {
   });
 
   const submit = async () => {
-    if (form.login === "" || form.login === "") {
+    if (form.login === "" || form.password === "") {
       alert("Please fill in all fields.");
       return;
     }
