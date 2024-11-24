@@ -70,20 +70,35 @@ const TabsLayout = () => {
           }}
         />
                         <Tabs.Screen
-          name="dashboard"
+          name="sell"
           options={{
-            title: 'Dashboard',
+            title: 'Add Products',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                  icon={icons.profile}
+                  icon={icons.plus}
                   color={color}
-                  name="Dashboard"
+                  name="Sell"
                   focused={focused}
               />
             )
           }}
-        />
+          />
+          <Tabs.Screen
+          name="cart"
+          options={{
+            title: 'Cart',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                  icon={icons.cart}
+                  color={color}
+                  name="Cart"
+                  focused={focused}
+              />
+            )
+          }}
+          />
       </Tabs>
     </>
   )

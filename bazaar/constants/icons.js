@@ -12,9 +12,10 @@ import eyeHide from "../assets/icons/eye-hide.png";
 import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
 import crops from "../assets/icons/crops.png";
-
+import cart from "../assets/icons/cart.png";
 
 export default {
+  cart,
   play,
   bookmark,
   home,
