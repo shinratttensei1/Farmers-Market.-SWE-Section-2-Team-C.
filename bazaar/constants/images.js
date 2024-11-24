@@ -5,7 +5,6 @@ import path from "../assets/images/path.png";
 import logo from "../assets/images/logo.png";
 import logoSmall from "../assets/images/logo-small.png";
 import empty from "../assets/images/empty.png";
-import freakbob from "../assets/images/freakbob.jpg";
 import bazaar_logo from "../assets/images/bazaar_logo.png";
 
-export default { bazaar_logo, freakbob, profile, thumbnail, cards, path, logo, logoSmall, empty };
+export default { bazaar_logo, profile, thumbnail, cards, path, logo, logoSmall, empty };
