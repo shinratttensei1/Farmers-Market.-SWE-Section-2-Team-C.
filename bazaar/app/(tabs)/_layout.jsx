@@ -40,15 +40,15 @@ const TabsLayout = () => {
       }}
       >
         <Tabs.Screen
-          name="crops"
+          name="products"
           options={{
-            title: 'Crops',
+            title: 'Products',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                   icon={icons.crops}
                   color={color}
-                  name="Crops"
+                  name="Products"
                   focused={focused}
               />
             )

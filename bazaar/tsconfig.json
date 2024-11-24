@@ -14,5 +14,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-, "constants/index.js", "constants/images.js", "constants/icons.js", "app/(tabs)/profile.jsx", "app/(tabs)/crops.jsx", "app/(tabs)/bookmark.jsx", "app/(tabs)/_layout.jsx", "app/(auth)/sign_up_buyer.jsx", "app/(auth)/_layout.jsx", "app/(auth)/sign_in.jsx", "constants/Colors.js", "constants/Colors.js", "app/create.jsx", "app/search/[query].jsx", "app/_layout.jsx"  ]
+, "constants/index.js", "constants/images.js", "constants/icons.js", "app/(tabs)/profile.jsx", "app/(tabs)/products.jsx", "app/(tabs)/bookmark.jsx", "app/(tabs)/_layout.jsx", "app/(auth)/sign_up_buyer.jsx", "app/(auth)/_layout.jsx", "app/(auth)/sign_in.jsx", "constants/Colors.js", "constants/Colors.js", "app/create.jsx", "app/search/[query].jsx", "app/_layout.jsx"  ]
 }
