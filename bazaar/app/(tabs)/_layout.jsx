@@ -6,7 +6,7 @@ import { icons } from '../../constants'
 
 const TabIcon = ({ icon, color, name, focused }) => {
     return (
-        <View className='items-center justify-bottom gap-2'>
+        <View className='items-center justify-bottom gap-2 text-center'>
           <Image
           source={icon}
           tintColor={color}
@@ -54,25 +54,10 @@ const TabsLayout = () => {
             )
           }}
         />
-                <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                  icon={icons.profile}
-                  color={color}
-                  name="Profile"
-                  focused={focused}
-              />
-            )
-          }}
-        />
-                        <Tabs.Screen
+        <Tabs.Screen
           name="sell"
           options={{
-            title: 'Add Products',
+            title: 'Sell',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
@@ -83,22 +68,37 @@ const TabsLayout = () => {
               />
             )
           }}
-          />
-          <Tabs.Screen
-          name="cart"
-          options={{
-            title: 'Cart',
-            headerShown: false,
-            tabBarIcon: ({ color, focused }) => (
-              <TabIcon
-                  icon={icons.cart}
-                  color={color}
-                  name="Cart"
-                  focused={focused}
-              />
-            )
-          }}
-          />
+        />
+        <Tabs.Screen
+        name="cart"
+        options={{
+          title: 'Cart',
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+                icon={icons.cart}
+                color={color}
+                name="Cart"
+                focused={focused}
+            />
+          )
+        }}
+        />
+        <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          headerShown: false,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+                icon={icons.profile}
+                color={color}
+                name="Profile"
+                focused={focused}
+            />
+          )
+        }}
+        />
       </Tabs>
     </>
   )
