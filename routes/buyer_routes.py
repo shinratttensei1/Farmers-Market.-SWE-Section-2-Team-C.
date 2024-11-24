@@ -14,7 +14,7 @@ def register_buyer():
     user = User(
         login=data['login'],
         email=data['email'],
-        password=hashed_password,
+        password=data['password'],
         phonenumber=data['phonenumber'],
         role='buyer',
         isVerified=True,

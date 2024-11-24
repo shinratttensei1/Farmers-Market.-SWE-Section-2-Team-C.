@@ -66,8 +66,18 @@
             const confirmAction = confirm(`Are you sure you want to ${action} ${name}?`);
             if (!confirmAction) return;
 
+
+            let method;
+            if (action === 'approve' || action === 'enable' || action === 'disable') {
+                method = 'PUT';
+            } else if (action === 'reject') {
+                method = 'DELETE';
+            } else {
+                console.error("Unsupported action type");
+                return;
+            }
+
             const url = `/admin/${action}-user/${userId}`;
-            const method = action === 'enable' || action === 'disable' ? 'PUT' : 'DELETE';
 
             try {
                 const response = await fetch(url, { method });
@@ -75,7 +85,11 @@
 
                 if (response.ok) {
                     alert(data.msg);
-                    location.reload(); // Reload page to reflect changes
+                    if (rowId) {
+                        document.getElementById(rowId).remove();
+                    } else {
+                        location.reload();
+                    }
                 } else {
                     alert(data.error || 'An error occurred');
                 }
@@ -148,7 +162,7 @@
             {% for user, farmer in registered_farmers %}
             <tr id="registered-farmer-{{ user.userID }}">
                 <td><img src="{{ farmer.profilePicture }}" alt="Profile Picture"></td>
-flusk                 <td>{{ user.name }}</td>
+                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.phonenumber }}</td>
                 <td>{{ farmer.resources }}</td>

@@ -25,15 +25,43 @@ def get_pending_farmers():
         })
     return jsonify(response), 200
 
-@admin_blueprint.route('/approve-user/<int:userID>', methods=['GET', 'PUT'])
-def approve_user(userID):
-    user = User.query.get(userID)
-    if not user or user.role != 'farmer':
-        return jsonify({"msg": "User not found or invalid role"}), 404
+@admin_blueprint.route('/approve-user/<int:user_id>', methods=['PUT'])
+def approve_user(user_id):
+    """
+    Approve a farmer user by setting 'isVerified' to True.
+    Ensures that 'isVerified' is updated even if other errors occur.
+    """
+    try:
+        # Fetch the user
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
 
-    user.isVerified = True
-    db.session.commit()
-    return jsonify({"msg": f"{user.name} has been approved!"}), 200
+        # Ensure the user is a farmer
+        if user.role != 'farmer':
+            return jsonify({"error": "Only farmers can be approved"}), 400
+
+        # Set isVerified to True
+        user.isVerified = True
+        db.session.commit()
+
+        return jsonify({"msg": f"User '{user.name}' has been approved successfully!"}), 200
+
+    except Exception as e:
+        db.session.rollback()  # Rollback any ongoing transaction
+        try:
+            # Ensure isVerified is set to True as a fallback
+            user = User.query.get(user_id)  # Re-fetch the user
+            if user and user.role == 'farmer':  # Double-check user and role
+                user.isVerified = True
+                db.session.commit()
+                return jsonify({"warning": f"An error occurred, but '{user.name}' was still approved: {str(e)}"}), 200
+        except Exception as rollback_error:
+            return jsonify({
+                "error": f"Critical error while approving the user: {str(e)}",
+                "rollback_error": str(rollback_error)
+            }), 500
+
 
 @admin_blueprint.route('/reject-user/<int:userID>', methods=['GET', 'DELETE'])
 def reject_user(userID):
@@ -113,45 +141,37 @@ def approve_user(user_id):
     return jsonify({"msg": f"User '{user.name}' approved successfully!"}), 200
 
 
-@admin_blueprint.route('/reject-user/<int:user_id>', methods=['DELETE'])
-def reject_user(user_id):
-    user = User.query.get(user_id)
-    if not user or user.role != 'farmer':
-        return jsonify({"error": "User not found or invalid role"}), 404
-
-    # Delete related farmer entry if exists
-    farmer = Farmer.query.filter_by(farmerID=user.userID).first()
-    if farmer:
-        db.session.delete(farmer)
-
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"msg": f"User '{user.name}' rejected and removed!"}), 200
-
 @admin_blueprint.route('/delete-user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
-    # Fetch the user
-    user = User.query.get(user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
+    try:
+        # Fetch the user
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({"error": "User not found"}), 404
 
-    # If the user is a farmer, delete the farmer entry
-    if user.role == 'farmer':
-        farmer = Farmer.query.filter_by(farmerID=user.userID).first()
-        if farmer:
-            db.session.delete(farmer)
+        if user.role == 'farmer':
+            # Delete all farms associated with the farmer
+            Farm.query.filter_by(farmerID=user_id).delete()
 
-    # If the user is a buyer, delete the buyer entry
-    if user.role == 'buyer':
-        buyer = Buyer.query.filter_by(buyerID=user.userID).first()
-        if buyer:
-            db.session.delete(buyer)
+            # Delete the farmer entry
+            Farmer.query.filter_by(farmerID=user_id).delete()
 
-    # Delete the user
-    db.session.delete(user)
-    db.session.commit()
+        elif user.role == 'buyer':
+            # Delete the buyer entry if the user is a buyer
+            Buyer.query.filter_by(buyerID=user_id).delete()
 
-    return jsonify({"msg": f"User '{user.name}' deleted successfully!"}), 200
+        # Finally, delete the user
+        db.session.delete(user)
+        db.session.commit()
+
+        return jsonify({"msg": f"User '{user.name}' and their associated data have been deleted successfully!"}), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred while deleting the user: {str(e)}"}), 500
+
+
+
 
 @admin_blueprint.route('/farms/<int:farmer_id>', methods=['GET'])
 def get_farms(farmer_id):
@@ -169,6 +189,21 @@ def get_farms(farmer_id):
         return render_template('farmer_details.html', farmer=farmer, user=user, farms=farms)
     except Exception as e:
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+@admin_blueprint.route('/reject-user/<int:user_id>', methods=['DELETE'])
+def reject_user(user_id):
+    user = User.query.get(user_id)
+    if not user or user.role != 'farmer':
+        return jsonify({"error": "User not found or invalid role"}), 404
+
+    # Delete related farmer entry if exists
+    farmer = Farmer.query.filter_by(farmerID=user.userID).first()
+    if farmer:
+        db.session.delete(farmer)
+
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"msg": f"User '{user.name}' rejected and removed!"}), 200
 
 
 @admin_blueprint.route('/edit-user/<int:user_id>', methods=['GET', 'POST'])
