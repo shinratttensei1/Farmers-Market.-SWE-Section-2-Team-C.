@@ -24,6 +24,7 @@ def login_app():
         if user and user.password == password:
             session['user_id'] = user.userID
             session['role'] = user.role
+            flash('Login successful!', 'success')
             return jsonify({
                 "msg": "Login successful!",
                 "user": {
