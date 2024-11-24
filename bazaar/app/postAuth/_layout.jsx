@@ -1,6 +1,6 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { FaHome, FaPlusCircle, FaList, FaShoppingCart } from "react-icons/fa";
+import { FaHome, FaPlusCircle, FaList, FaShoppingCart, FaCartArrowDown } from "react-icons/fa";
 
 export default function PostAuthLayout() {
   return (
@@ -42,6 +42,14 @@ export default function PostAuthLayout() {
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => <FaList size={20} color={color} />,
+        }}
+      />
+      {/* Cart for Buyer */}
+            <Tabs.Screen
+        name="buyer/cart"
+        options={{
+          title: "Cart",
+          tabBarIcon: ({ color }) => <FaShoppingCart size={20} color={color} />,
         }}
       />
 
