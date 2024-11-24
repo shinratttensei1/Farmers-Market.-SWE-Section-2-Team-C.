@@ -20,19 +20,22 @@ const SignIn = () => {
       alert("Please fill in all fields.");
       return;
     }
+  
     setSubmitting(true);
+  
     try {
-      // console.log(api); 
-      // console.log(api.post);
-      // const response = await axios.post('http://localhost:5000/register/farmer', formattedForm);
-      const response = await api.post('/auth/app/login', setForm);
+      const payload = {
+        login: form.login,
+        password: form.password,
+      };
+  
+      const response = await api.post('auth/app/login', payload);
       Alert.alert('Success', response.data.msg);
-      router.replace("/profile");
+      router.replace('/profile');
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong!');
-      alert('Something went wrong!');
-    }
-    finally {
+      console.error('Login error:', error.response?.data || error.message);
+      Alert.alert('Error', error.response?.data?.error || 'Something went wrong!');
+    } finally {
       setSubmitting(false);
     }
   };

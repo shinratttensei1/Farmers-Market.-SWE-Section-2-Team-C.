@@ -18,13 +18,11 @@ db.init_app(app)
 app.register_blueprint(login_blueprint, url_prefix='/auth')
 app.register_blueprint(registration_blueprint, url_prefix='/auth')
 app.register_blueprint(admin_blueprint, url_prefix='/admin')
+app.register_blueprint(farmer_blueprint, url_prefix='/farmer')
+app.register_blueprint(buyer_blueprint, url_prefix='/buyer')
 
 with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-app.register_blueprint(farmer_blueprint, url_prefix='/farmer')
-app.register_blueprint(buyer_blueprint, url_prefix='/buyer')

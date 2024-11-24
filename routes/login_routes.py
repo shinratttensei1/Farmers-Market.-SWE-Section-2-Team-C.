@@ -7,6 +7,9 @@ login_blueprint = Blueprint('login', __name__)
 @login_blueprint.route('/app/login', methods=['POST'])
 def login_app():
     try:
+        # print("Headers:", request.headers)  # Debugging headers
+        # print("Content-Type:", request.content_type)  # Debugging content type
+
         data = request.json
 
         if 'login' not in data or 'password' not in data:
@@ -17,10 +20,10 @@ def login_app():
 
         user = User.query.filter_by(login=login).first()
 
-        if login and check_password_hash(user.password, password):
+        # if user and check_password_hash(user.password, password):
+        if user and user.password == password:
             session['user_id'] = user.userID
             session['role'] = user.role
-            flash('User login successful!', 'success')
             return jsonify({
                 "msg": "Login successful!",
                 "user": {
