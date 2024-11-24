@@ -37,8 +37,6 @@ const SignUpB = () => {
     // add other checks later like password length etc
     setSubmitting(true);
     try {
-      // console.log(api); 
-      // console.log(api.post);
       const response = await api.post('/buyer/register', form);
       Alert.alert('Success', response.data.msg);
       router.replace("/profile");

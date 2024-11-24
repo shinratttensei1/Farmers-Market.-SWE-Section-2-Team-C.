@@ -16,7 +16,7 @@ const SignIn = () => {
   });
 
   const submit = async () => {
-    if (form.login === "" || form.password === "") {
+    if (form.login === "" || form.login === "") {
       alert("Please fill in all fields.");
       return;
     }
@@ -25,11 +25,12 @@ const SignIn = () => {
       // console.log(api); 
       // console.log(api.post);
       // const response = await axios.post('http://localhost:5000/register/farmer', formattedForm);
-      const response = await api.post('auth/login', setForm);
+      const response = await api.post('/auth/app/login', setForm);
       Alert.alert('Success', response.data.msg);
       router.replace("/profile");
     } catch (error) {
       Alert.alert('Error', 'Something went wrong!');
+      alert('Something went wrong!');
     }
     finally {
       setSubmitting(false);
@@ -70,7 +71,7 @@ const SignIn = () => {
 
           <FormField
             className="text-black-300"
-            title="Login"
+            title="login"
             value={form.login}
             handleChangeText={(e) => setForm({ ...form, login: e })}
             otherStyles="mt-7"

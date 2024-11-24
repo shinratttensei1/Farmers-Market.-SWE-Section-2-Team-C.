@@ -14,8 +14,6 @@ def register_user():
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
 
-    # Hash the password for security
-
     # Create a new user object
     user = User(
         login=data['login'],
