@@ -1,9 +1,10 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
+import "../global.css"
 
 const Profile = () => {
   return (
-    <View>
+    <View className='justify-center'>
       <Text>Profile</Text>
     </View>
   )
