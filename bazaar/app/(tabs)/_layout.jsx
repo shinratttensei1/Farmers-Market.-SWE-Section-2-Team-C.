@@ -42,7 +42,7 @@ const TabsLayout = () => {
         <Tabs.Screen
           name="products"
           options={{
-            title: 'Products',
+            title: 'MarketPlace',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
@@ -55,15 +55,15 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="sell"
+          name="addproducts"
           options={{
-            title: 'Sell',
+            title: 'Add Products',
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
                   icon={icons.plus}
                   color={color}
-                  name="Sell"
+                  name="Add Products"
                   focused={focused}
               />
             )
@@ -95,7 +95,8 @@ const TabsLayout = () => {
                 color={color}
                 name="Profile"
                 focused={focused}
-            />
+          />
+          
           )
         }}
         />
