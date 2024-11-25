@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from config import Config
 from extensions import db
@@ -23,6 +25,11 @@ app.register_blueprint(farmer_blueprint, url_prefix='/farmer')
 app.register_blueprint(buyer_blueprint, url_prefix='/buyer')
 app.register_blueprint(marketplace_blueprint, url_prefix='/marketplace')
 
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit to 16MB
+
+if not os.path.exists('static/uploads'):
+    os.makedirs('static/uploads')
 
 with app.app_context():
     db.create_all()
