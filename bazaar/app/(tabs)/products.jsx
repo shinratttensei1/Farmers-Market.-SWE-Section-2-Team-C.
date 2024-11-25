@@ -8,7 +8,7 @@ const Products = () => {
 
   // Fetch products from the API
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/marketplace/")
+    fetch("https://sersidw.pythonanywhere.com//marketplace/")
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
