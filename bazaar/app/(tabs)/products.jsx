@@ -8,7 +8,7 @@ const Products = () => {
 
   // Fetch products from the API
   useEffect(() => {
-    fetch("https://sersidw.pythonanywhere.com/marketplace")
+    fetch("https://sersidw.pythonanywhere.com/api/marketplace")
       .then((response) => response.json())
       .then((data) => setProducts(data))
       .catch((error) => console.error("Error fetching products:", error));
