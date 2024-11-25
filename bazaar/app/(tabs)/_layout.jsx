@@ -6,7 +6,7 @@ import { icons } from '../../constants'
 
 const TabIcon = ({ icon, color, name, focused }) => {
     return (
-        <View className='items-center justify-bottom gap-2 text-center'>
+        <View className='items-center justify-center gap-2 text-center'>
           <Image
           source={icon}
           tintColor={color}
@@ -55,7 +55,7 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="addproducts"
+          name="add-products"
           options={{
             title: 'Add Products',
             headerShown: false,

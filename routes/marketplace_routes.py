@@ -10,51 +10,44 @@ marketplace_blueprint = Blueprint('marketplace', __name__)
 
 @marketplace_blueprint.route('', methods=['GET'])
 def marketplace_page():
-    # Query all products from the database
     products = Product.query.all()
 
-    # Return the marketplace page with the products
     return render_template('marketplace.html', products=products)
-
 
 @marketplace_blueprint.route('/add-product', methods=['POST'])
 def add_product():
     """
     Allow farmers to publish their products to the marketplace with multiple images.
     """
-    data = request.form  # Use `form` for handling text fields and `files` for file uploads
+    data = request.form
     required_fields = ['name', 'description', 'price', 'quantity', 'farmerID', 'category']
 
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
-
-    # Ensure the user is a verified farmer
+        
     farmer = User.query.filter_by(userID=data['farmerID'], role='Farmer', isVerified=True).first()
     if not farmer:
         return jsonify({"error": "Invalid or unverified farmer ID"}), 403
 
-    # Handle multiple image uploads
     files = request.files.getlist('images')
     image_paths = []
 
     for file in files:
         if file:
-            # Save the file to a static/uploads directory
             filename = secure_filename(file.filename)
             file_path = os.path.join('static/uploads', filename)
             file.save(file_path)
             image_paths.append(file_path)
 
-    # Add new product to the database
     new_product = Product(
         name=data['name'],
         description=data['description'],
-        category=data['category'],  # Include the category field
-        price=float(data['price']),  # Ensure price is stored as float
-        quantity=int(data['quantity']),  # Ensure quantity is stored as int
+        category=data['category'],
+        price=float(data['price']),
+        quantity=int(data['quantity']),
         farmerID=int(data['farmerID']),
-        images=json.dumps(image_paths)  # Store the list of image paths as JSON
+        images=json.dumps(image_paths)
     )
     db.session.add(new_product)
     db.session.commit()

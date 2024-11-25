@@ -13,13 +13,17 @@ const AddProducts = () => {
     const [form, setForm] = useState({
         name: "",
         category: "",
+        description: "",
         price: "",
         quantity: "",
+        farmerID: 29,
+        //FarmerTest 123
     });
 
     const submit = async () => {
         if (form.name === "" ||
             form.category === "" ||
+            form.description === "" ||
             form.price === "" ||
             form.quantity === ""
         ) {
@@ -31,7 +35,7 @@ const AddProducts = () => {
         
         try {
             const payload = setForm;
-            const response = await api.post('/marketplace/products/add', payload);
+            const response = await api.post('/marketplace/add-product', payload);
             Alert.alert('Success', response.data.msg);
             alert("Product successfully added!");
             // router.replace('/profile');
@@ -88,6 +92,13 @@ const AddProducts = () => {
                     title="Category"
                     value={form.category}
                     handleChangeText={(e) => setForm({ ...form, category: e })}
+                    otherStyles="mt-7"
+                />
+
+                <FormField
+                    title="Description"
+                    value={form.description}
+                    handleChangeText={(e) => setForm({ ...form, description: e })}
                     otherStyles="mt-7"
                 />
 
