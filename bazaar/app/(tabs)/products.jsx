@@ -8,7 +8,7 @@ const Products = () => {
 
   // Fetch products from the API
   useEffect(() => {
-    fetch("https://sersidw.pythonanywhere.com/api/marketplace")
+    fetch("http://127.0.0.1:5000/marketplace/")
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -29,8 +29,8 @@ const Products = () => {
   const renderProduct = ({ item }) => {
     const mainImage =
       item.images && item.images.length > 0
-        ? `https://sersidw.pythonanywhere.com/static/${item.images[0]}`
-        : "https://sersidw.pythonanywhere.com/static/uploads/default.jpg";
+        ? `http://127.0.0.1:5000/static/${item.images[0]}`
+        : "http://127.0.0.1:5000/static/uploads/default.jpg";
 
     return (
       <TouchableOpacity style={styles.productCard}>
