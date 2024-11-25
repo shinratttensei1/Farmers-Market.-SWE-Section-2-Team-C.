@@ -18,17 +18,41 @@ const AddProducts = () => {
         description: "",
         price: "",
         quantity: "",
-        farmerID: 29,
+        farmerID: 36,
         category: "",
         //FarmerTest 123
     });
 
-    const selectImages = () => {
-        
-    }
+    const selectImages = async () => {
+        try {
+          const result = await launchImageLibrary(
+            {
+              mediaType: 'photo',
+              selectionLimit: 5,
+              quality: 1,
+            },
+            (response) => {
+              if (response.didCancel) {
+                console.log("User cancelled image selection.");
+              } else if (response.errorCode) {
+                console.error("ImagePicker Error:", response.errorMessage);
+              } else {
+                const selectedImages = response.assets.map((asset) => ({
+                  uri: asset.uri,
+                  name: asset.fileName || `image_${Date.now()}.jpg`,
+                  type: asset.type || 'image/jpeg',
+                }));
+      
+                setImages((prevImages) => [...prevImages, ...selectedImages].slice(0, 5)); // Limit to 5
+              }
+            }
+          );
+        } catch (error) {
+          console.error("Error selecting images:", error.message);
+        }
+      };
     
-    const Submit = async () => {
-        // Validate required fields
+      const Submit = async () => {
         const requiredFields = ["name", "description", "price", "quantity", "farmerID", "category"];
         for (const field of requiredFields) {
           if (!form[field]) {
@@ -36,9 +60,23 @@ const AddProducts = () => {
             return;
           }
         }
-    
+      
+        const formData = new FormData();
+      
+        Object.keys(form).forEach((key) => {
+          formData.append(key, form[key]);
+        });
+      
+        images.forEach((image, index) => {
+          formData.append("images", {
+            uri: image.uri,
+            name: image.name || `image_${index}.jpg`,
+            type: image.type || "image/jpeg",
+          });
+        });
+      
         try {
-          // Submit the product data with images to the backend
+          setSubmitting(true);
           const response = await api.post("/marketplace/add-product", formData, {
             headers: {
               "Content-Type": "multipart/form-data",
@@ -46,21 +84,22 @@ const AddProducts = () => {
           });
           Alert.alert("Success", response.data.msg);
       
-          // Clear form and images on success
           setForm({
             name: "",
             description: "",
             price: "",
             quantity: "",
-            farmerID: "",
+            farmerID: 36,
             category: "",
           });
           setImages([]);
         } catch (error) {
           console.error("Error submitting product:", error.response?.data || error.message);
           Alert.alert("Error", "Something went wrong. Please try again.");
+        } finally {
+          setSubmitting(false);
         }
-      };
+    };
 
     return (
         <SafeAreaView

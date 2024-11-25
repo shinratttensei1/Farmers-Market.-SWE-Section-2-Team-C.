@@ -54,9 +54,6 @@ def add_product():
 
     return jsonify({"msg": "Product published successfully!", "productID": new_product.productID}), 201
 
-
-
-
 @marketplace_blueprint.route('/delete-product/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
     """
