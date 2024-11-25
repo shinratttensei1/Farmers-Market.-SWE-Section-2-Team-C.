@@ -24,8 +24,14 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
+        .product-card .image-container {
+            position: relative;
+            height: 150px;
+            overflow: hidden;
+        }
         .product-card img {
             max-width: 100%;
+            max-height: 150px;
             border-radius: 4px;
         }
         .product-card h3 {
@@ -40,18 +46,60 @@
             color: #28a745;
             font-weight: bold;
         }
+        .product-card .category {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        .carousel {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .carousel img {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .carousel img:hover {
+            border: 2px solid #007bff;
+        }
     </style>
+    <script>
+        function updateMainImage(mainImageId, src) {
+            const mainImage = document.getElementById(mainImageId);
+            mainImage.src = src;
+        }
+    </script>
 </head>
 <body>
     <h1>Marketplace</h1>
     <div class="product-list">
         {% for product in products %}
         <div class="product-card">
-            <img src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
+            <div class="image-container">
+                <img id="main-image-{{ product.productID }}"
+                     src="{{ url_for('static', filename=(product.images[0] if product.images else 'uploads/default.jpg')) }}"
+                     alt="{{ product.name }}">
+            </div>
             <h3>{{ product.name }}</h3>
+            <p class="category">{{ product.category }}</p>
             <p>{{ product.description }}</p>
             <p class="price">${{ product.price }}</p>
             <p>Quantity: {{ product.quantity }}</p>
+            {% if product.images and product.images|length > 1 %}
+            <div class="carousel">
+                {% for image in product.images %}
+                <img src="{{ url_for('static', filename=image) }}"
+                     alt="Thumbnail for {{ product.name }}"
+                     onclick="updateMainImage('main-image-{{ product.productID }}', '{{ url_for('static', filename=image) }}')">
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endfor %}
     </div>
