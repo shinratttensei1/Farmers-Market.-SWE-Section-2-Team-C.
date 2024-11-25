@@ -76,8 +76,13 @@
         }
     </script>
 </head>
+
 <body>
-    <h1>Marketplace</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Marketplace</h1>
+        <!-- New Admin Dashboard Button -->
+        <a href="/admin/dashboard" style="text-decoration: none; background-color: #007bff; color: white; padding: 10px 20px; border-radius: 4px;">Go to Admin Dashboard</a>
+    </div>
     <div class="product-list">
         {% for product in products %}
         <div class="product-card">
@@ -104,4 +109,6 @@
         {% endfor %}
     </div>
 </body>
+
+
 </html>
