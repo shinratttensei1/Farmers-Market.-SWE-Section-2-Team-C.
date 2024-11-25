@@ -1,31 +1,44 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Products = () => {
-  // Sample product data; replace with fetched data from API.
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading state
 
   // Fetch products from the API
   useEffect(() => {
-    fetch("https://sersidw.pythonanywhere.com/marketplace")
-      .then((response) => response.json())
-      .then((data) => setProducts(data))
-      .catch((error) => console.error("Error fetching products:", error));
+    fetch("https://sersidw.pythonanywhere.com/api/marketplace")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setProducts(data);
+        setLoading(false); // Stop loading after data fetch
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        setLoading(false); // Stop loading on error
+      });
   }, []);
 
   // Render individual product
   const renderProduct = ({ item }) => {
+    const mainImage =
+      item.images && item.images.length > 0
+        ? `https://sersidw.pythonanywhere.com/static/${item.images[0]}`
+        : "https://sersidw.pythonanywhere.com/static/uploads/default.jpg";
+
     return (
       <TouchableOpacity style={styles.productCard}>
-        <Image
-          source={{ uri: `https://sersidw.pythonanywhere.com/static/${item.images ? item.images[0] : "uploads/default.jpg"}` }}
-          style={styles.productImage}
-        />
+        <Image source={{ uri: mainImage }} style={styles.productImage} />
         <View style={styles.productDetails}>
           <Text style={styles.productName}>{item.name}</Text>
           <Text style={styles.productCategory}>{item.category || "No Category"}</Text>
-          <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+          <Text style={styles.productPrice}>${parseFloat(item.price).toFixed(2)}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -34,12 +47,14 @@ const Products = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Marketplace</Text>
-      {products.length === 0 ? (
+      {loading ? (
+        <ActivityIndicator size="large" color="#007bff" />
+      ) : products.length === 0 ? (
         <Text style={styles.emptyMessage}>No products available.</Text>
       ) : (
         <FlatList
           data={products}
-          keyExtractor={(item) => item.productID.toString()}
+          keyExtractor={(item) => item.productID?.toString() || Math.random().toString()}
           renderItem={renderProduct}
           contentContainerStyle={styles.listContent}
         />
