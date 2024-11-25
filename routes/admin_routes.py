@@ -94,6 +94,11 @@ from flask import Blueprint, jsonify, render_template
 
 admin_blueprint = Blueprint('admin', __name__)
 
+@admin_blueprint.route('/', methods=['GET'])
+def admin_starter_page():
+    return render_template('admin_starter.html')
+
+
 @admin_blueprint.route('/dashboard', methods=['GET'])
 def admin_dashboard():
     # Check if admin is logged in
@@ -315,56 +320,71 @@ def enable_user(user_id):
     return jsonify({"msg": f"User '{user.name}' has been enabled."}), 200
 
 
-@admin_blueprint.route('/register-admin', methods=['POST'])
+
+@admin_blueprint.route('/register', methods=['GET', 'POST'])
 def register_admin():
-    """
-    Allows an existing admin to register a new admin.
-    """
-    try:
-        # Get form data from the request
-        name = request.form.get('name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        phonenumber = request.form.get('phonenumber')
-        login = request.form.get('login')  # Fetch the 'login' field
+    if request.method == 'POST':
+        # Collect form data
+        login = request.form['login']
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        phonenumber = request.form['phonenumber']
 
-        # Validate required fields
-        if not name or not email or not password or not phonenumber or not login:
-            return jsonify({"error": "All fields are required"}), 400
+        # Check if the email or login is already registered
+        if User.query.filter((User.email == email) | (User.login == login)).first():
+            flash('Email or login is already registered. Please log in.', 'danger')
+            return redirect(url_for('admin.admin_login'))
 
-        # Check if the email or login is already used
-        existing_user = User.query.filter((User.email == email) | (User.login == login)).first()
-        if existing_user:
-            return jsonify({"error": "Email or login already registered"}), 400
-
-        # Hash the password before storing it
         # Create a new admin user
         new_admin = User(
-            name=name,
+            login=login,
             email=email,
             password=password,
             phonenumber=phonenumber,
             role='Admin',
             isVerified=True,
-            login=login  # Include the login field
+            name=name
         )
         db.session.add(new_admin)
         db.session.commit()
 
-        return jsonify({"msg": f"Admin '{name}' has been registered successfully!"}), 201
+        # Redirect to the login page
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('admin.admin_login'))
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"error": f"An error occurred while registering the new admin: {str(e)}"}), 500
+    return render_template('admin_register.html')
 
-@admin_blueprint.route('/register', methods=['GET'])
+
+
+@admin_blueprint.route('/register', methods=['GET', 'POST'])
 def register_admin_page():
-    """
-    Render the Admin Registration page.
-    """
-    # Check if the user is an admin
-    if 'admin_user_role' not in session or session['admin_user_role'] != 'Admin':
-        flash('Unauthorized access. Only admins can access this page.', 'danger')
-        return redirect(url_for('admin.admin_dashboard'))
+    if request.method == 'POST':
+        # Collect form data
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        phonenumber = request.form['phonenumber']
+
+        # Check if the email is already registered
+        if User.query.filter_by(email=email).first():
+            flash('Email is already registered. Please log in.', 'danger')
+            return redirect(url_for('admin.admin_login'))
+
+        # Create a new admin user
+        new_admin = User(
+            login=email,  # Using email as the login
+            email=email,
+            password=password,
+            phonenumber=phonenumber,
+            role='Admin',
+            isVerified=True,
+            name=name
+        )
+        db.session.add(new_admin)
+        db.session.commit()
+
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('admin.admin_login'))
 
     return render_template('admin_register.html')

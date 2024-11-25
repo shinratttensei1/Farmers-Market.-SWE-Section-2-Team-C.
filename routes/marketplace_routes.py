@@ -78,3 +78,26 @@ def delete_product(product_id):
     db.session.commit()
 
     return jsonify({"msg": "Product deleted successfully!"}), 200
+
+
+@marketplace_blueprint.route('/api/marketplace', methods=['GET'])
+def marketplace_api():
+    # Perform the same filtering, sorting, and search logic
+    # (similar to the `/marketplace` route above)
+    query = Product.query
+
+    # Process search and filters from request.args
+    # Build the query...
+    # (see logic above)
+
+    # Return JSON response
+    products = query.all()
+    return jsonify([{
+        "name": product.name,
+        "category": product.category,
+        "price": product.price,
+        "quantity": product.quantity,
+        "description": product.description,
+        "images": product.images.split(',') if product.images else [],
+        "location": product.farm_location
+    } for product in products]), 200
