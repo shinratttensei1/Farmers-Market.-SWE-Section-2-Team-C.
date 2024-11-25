@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, Image, TextInput, Picker, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state
+  const [filteredProducts, setFilteredProducts] = useState([]); // Filtered products
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(""); // For name search
+  const [farmLocationQuery, setFarmLocationQuery] = useState(""); // For farm location search
+  const [selectedCategory, setSelectedCategory] = useState(""); // Dropdown for categories
+  const [sortOrder, setSortOrder] = useState(""); // "asc" or "desc"
+  const [categories, setCategories] = useState([]); // Dynamic category list
 
-  // Fetch products from the API
+  // Fetch products and categories from the API
   useEffect(() => {
     fetch("https://sersidw.pythonanywhere.com/marketplace")
       .then((response) => {
@@ -17,19 +23,60 @@ const Products = () => {
       })
       .then((data) => {
         setProducts(data);
-        setLoading(false); // Stop loading after data fetch
+        setFilteredProducts(data); // Initialize filtered products
+
+        // Extract unique categories from products
+        const uniqueCategories = [...new Set(data.map((product) => product.category))];
+        setCategories(uniqueCategories);
+
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching products:", error);
-        setLoading(false); // Stop loading on error
+        setLoading(false);
       });
   }, []);
+
+  // Handle search and filters
+  useEffect(() => {
+    let updatedProducts = [...products];
+
+    // Filter by name search query
+    if (searchQuery) {
+      updatedProducts = updatedProducts.filter((product) =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Filter by farm location
+    if (farmLocationQuery) {
+      updatedProducts = updatedProducts.filter((product) =>
+        product.location.toLowerCase().includes(farmLocationQuery.toLowerCase())
+      );
+    }
+
+    // Filter by selected category
+    if (selectedCategory) {
+      updatedProducts = updatedProducts.filter(
+        (product) => product.category === selectedCategory
+      );
+    }
+
+    // Sort by price
+    if (sortOrder === "asc") {
+      updatedProducts.sort((a, b) => a.price - b.price);
+    } else if (sortOrder === "desc") {
+      updatedProducts.sort((a, b) => b.price - a.price);
+    }
+
+    setFilteredProducts(updatedProducts);
+  }, [searchQuery, farmLocationQuery, selectedCategory, sortOrder]);
 
   // Render individual product
   const renderProduct = ({ item }) => {
     const mainImage =
       item.images && item.images.length > 0
-        ? `https://sersidw.pythonanywhere.com/static/${item.images[0]}`
+        ? item.images[0]
         : "https://sersidw.pythonanywhere.com/static/uploads/default.jpg";
 
     return (
@@ -38,6 +85,7 @@ const Products = () => {
         <View style={styles.productDetails}>
           <Text style={styles.productName}>{item.name}</Text>
           <Text style={styles.productCategory}>{item.category || "No Category"}</Text>
+          <Text style={styles.productLocation}>Farm: {item.location || "Unknown"}</Text>
           <Text style={styles.productPrice}>${parseFloat(item.price).toFixed(2)}</Text>
         </View>
       </TouchableOpacity>
@@ -47,14 +95,60 @@ const Products = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Marketplace</Text>
+
+      {/* Search by Name */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search by product name"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
+      {/* Search by Farm Location */}
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search by farm location"
+        value={farmLocationQuery}
+        onChangeText={setFarmLocationQuery}
+      />
+
+      {/* Filter by Category (Dropdown) */}
+      <Picker
+        selectedValue={selectedCategory}
+        style={styles.picker}
+        onValueChange={(itemValue) => setSelectedCategory(itemValue)}
+      >
+        <Picker.Item label="All Categories" value="" />
+        {categories.map((category, index) => (
+          <Picker.Item key={index} label={category} value={category} />
+        ))}
+      </Picker>
+
+      {/* Sort by Price */}
+      <View style={styles.sortButtons}>
+        <TouchableOpacity
+          style={styles.sortButton}
+          onPress={() => setSortOrder("asc")}
+        >
+          <Text style={styles.sortButtonText}>Price: Low to High</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.sortButton}
+          onPress={() => setSortOrder("desc")}
+        >
+          <Text style={styles.sortButtonText}>Price: High to Low</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Product List */}
       {loading ? (
         <ActivityIndicator size="large" color="#007bff" />
-      ) : products.length === 0 ? (
-        <Text style={styles.emptyMessage}>No products available.</Text>
+      ) : filteredProducts.length === 0 ? (
+        <Text style={styles.emptyMessage}>No products found.</Text>
       ) : (
         <FlatList
-          data={products}
-          keyExtractor={(item) => item.productID?.toString() || Math.random().toString()}
+          data={filteredProducts}
+          keyExtractor={(item, index) => index.toString()}
           renderItem={renderProduct}
           contentContainerStyle={styles.listContent}
         />
@@ -75,8 +169,33 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
   },
-  listContent: {
-    paddingBottom: 20,
+  searchInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 10,
+  },
+  picker: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: "#fff",
+  },
+  sortButtons: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 10,
+  },
+  sortButton: {
+    padding: 10,
+    backgroundColor: "#007bff",
+    borderRadius: 5,
+  },
+  sortButtonText: {
+    color: "#fff",
   },
   productCard: {
     backgroundColor: "#fff",
@@ -104,6 +223,11 @@ const styles = StyleSheet.create({
   productCategory: {
     fontSize: 14,
     color: "#888",
+    marginBottom: 5,
+  },
+  productLocation: {
+    fontSize: 14,
+    color: "#555",
     marginBottom: 5,
   },
   productPrice: {
