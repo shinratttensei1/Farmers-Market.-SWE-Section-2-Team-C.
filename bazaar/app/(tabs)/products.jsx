@@ -9,11 +9,6 @@ const Products = () => {
   // Fetch products from the API
   useEffect(() => {
     fetch("https://sersidw.pythonanywhere.com/api/marketplace")
-<<<<<<< HEAD
-      .then((response) => response.json())
-      .then((data) => setProducts(data))
-      .catch((error) => console.error("Error fetching products:", error));
-=======
       .then((response) => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
@@ -28,7 +23,6 @@ const Products = () => {
         console.error("Error fetching products:", error);
         setLoading(false); // Stop loading on error
       });
->>>>>>> 48409438b191df9fb4ac149c5b77a93416b847fd
   }, []);
 
   // Render individual product
