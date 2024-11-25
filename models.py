@@ -47,20 +47,15 @@ class Farm(db.Model):
 
 from extensions import db
 
+
 class Product(db.Model):
     __tablename__ = 'product'
 
-    productID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    farmerID = db.Column(db.Integer, db.ForeignKey('farmers.farmerID'), nullable=False)
-    name = db.Column(db.String(64), nullable=False)
-    category = db.Column(db.String(32), nullable=False)
+    productID = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
     price = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    images = db.Column(db.Text, nullable=True)
+    farmerID = db.Column(db.Integer, db.ForeignKey('user.userID'), nullable=False)
 
-    # Relationship with Farmer model
-    farmer = db.relationship('Farmer', backref=db.backref('products', lazy=True))
-
-    def __repr__(self):
-        return f"<Product {self.name}, Price: {self.price}, Quantity: {self.quantity}>"
+    farmer = db.relationship('User', backref='products')
