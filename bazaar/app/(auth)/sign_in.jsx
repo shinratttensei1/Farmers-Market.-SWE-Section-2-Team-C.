@@ -72,7 +72,6 @@ const SignIn = () => {
           </Text>
 
           <FormField
-            className="text-black-300"
             title="login"
             value={form.login}
             handleChangeText={(e) => setForm({ ...form, login: e })}

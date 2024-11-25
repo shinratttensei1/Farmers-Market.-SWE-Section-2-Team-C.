@@ -2,50 +2,65 @@ import { useState, useEffect } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
-
+import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker"; 
 import { images } from "../../constants";
 import { CustomButton, FormField } from "../../components";
 import api from '../(auth)/api';
 
 const AddProducts = () => {
 
+    const [images, setImages] = useState([]);
     const [isSubmitting, setSubmitting] = useState(false);
     const [form, setForm] = useState({
         name: "",
-        category: "",
         description: "",
         price: "",
         quantity: "",
         farmerID: 29,
+        category: "",
         //FarmerTest 123
     });
 
-    const submit = async () => {
-        if (form.name === "" ||
-            form.category === "" ||
-            form.description === "" ||
-            form.price === "" ||
-            form.quantity === ""
-        ) {
-            alert("Please fill in all fields.");
+    const selectImages = () => {
+        
+    }
+    
+    const Submit = async () => {
+        // Validate required fields
+        const requiredFields = ["name", "description", "price", "quantity", "farmerID", "category"];
+        for (const field of requiredFields) {
+          if (!form[field]) {
+            alert(`Please fill in the ${field} field.`);
             return;
+          }
         }
-        
-        setSubmitting(true);
-        
+    
         try {
-            const payload = setForm;
-            const response = await api.post('/marketplace/add-product', payload);
-            Alert.alert('Success', response.data.msg);
-            alert("Product successfully added!");
-            // router.replace('/profile');
+          // Submit the product data with images to the backend
+          const response = await api.post("/marketplace/add-product", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          });
+          Alert.alert("Success", response.data.msg);
+      
+          // Clear form and images on success
+          setForm({
+            name: "",
+            description: "",
+            price: "",
+            quantity: "",
+            farmerID: "",
+            category: "",
+          });
+          setImages([]);
         } catch (error) {
-            console.error('Marketplace:', error.response?.data || error.message);
-            Alert.alert('Error', error.response?.data?.error || 'Something went wrong!');
-        } finally {
-            setSubmitting(false);
+          console.error("Error submitting product:", error.response?.data || error.message);
+          Alert.alert("Error", "Something went wrong. Please try again.");
         }
-    };
+      };
 
     return (
         <SafeAreaView
@@ -79,9 +94,7 @@ const AddProducts = () => {
                 >
                 Add New Product
                 </Text>
-
                 <FormField
-                className="text-black-300"
                 title="Product Name"
                 value={form.name}
                 handleChangeText={(e) => setForm({ ...form, name: e })}
@@ -117,8 +130,15 @@ const AddProducts = () => {
                 />
 
                 <CustomButton
+                    title="Select Images"
+                    handlePress={selectImages}
+                    containerStyles="mt-7"
+                    isLoading={isSubmitting}
+                />
+
+                <CustomButton
                     title="Add Product"
-                    handlePress={submit}
+                    handlePress={Submit}
                     containerStyles="mt-7"
                     isLoading={isSubmitting}
                 />
