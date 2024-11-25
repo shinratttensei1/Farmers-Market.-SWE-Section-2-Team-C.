@@ -1,20 +1,22 @@
 import os
-
+import json
 from flask import Blueprint, request, jsonify, render_template
 from werkzeug.utils import secure_filename
-import json
-
 from models import db, Product, User
 
-marketplace_blueprint = Blueprint('marketplace', __name__)
+# Separate web and API blueprints
+marketplace_web = Blueprint('marketplace_web', __name__)
+marketplace_api = Blueprint('marketplace_api', __name__)
 
-@marketplace_blueprint.route('', methods=['GET'])
+
+# Web routes
+@marketplace_web.route('', methods=['GET'])
 def marketplace_page():
     products = Product.query.all()
-
     return render_template('marketplace.html', products=products)
 
-@marketplace_blueprint.route('/add-product', methods=['POST'])
+
+@marketplace_web.route('/add-product', methods=['POST'])
 def add_product():
     """
     Allow farmers to publish their products to the marketplace with multiple images.
@@ -25,7 +27,7 @@ def add_product():
     for field in required_fields:
         if field not in data:
             return jsonify({"error": f"Missing field: {field}"}), 400
-        
+
     farmer = User.query.filter_by(userID=data['farmerID'], role='Farmer', isVerified=True).first()
     if not farmer:
         return jsonify({"error": "Invalid or unverified farmer ID"}), 403
@@ -47,14 +49,14 @@ def add_product():
         price=float(data['price']),
         quantity=int(data['quantity']),
         farmerID=int(data['farmerID']),
-        images=json.dumps(image_paths)
+        images=json.dumps(image_paths)  # Store images as JSON
     )
     db.session.add(new_product)
     db.session.commit()
 
     return jsonify({"msg": "Product published successfully!", "productID": new_product.productID}), 201
 
-@marketplace_blueprint.route('/delete-product/<int:product_id>', methods=['DELETE'])
+@marketplace_web.route('/delete-product/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
     """
     Allow farmers to delete their own products from the marketplace.
@@ -69,19 +71,10 @@ def delete_product(product_id):
 
     return jsonify({"msg": "Product deleted successfully!"}), 200
 
-
-@marketplace_blueprint.route('/api/marketplace', methods=['GET'])
-def marketplace_api():
-    # Perform the same filtering, sorting, and search logic
-    # (similar to the `/marketplace` route above)
-    query = Product.query
-
-    # Process search and filters from request.args
-    # Build the query...
-    # (see logic above)
-
-    # Return JSON response
-    products = query.all()
+# API routes
+@marketplace_api.route('/', methods=['GET'])
+def fetch_marketplace_products():
+    products = Product.query.all()
     return jsonify([{
         "name": product.name,
         "category": product.category,
@@ -91,23 +84,3 @@ def marketplace_api():
         "images": product.images.split(',') if product.images else [],
         "location": product.farm_location
     } for product in products]), 200
-
-def get_marketplace_products():
-    try:
-        # Fetch all products from the database
-        products = Product.query.all()
-
-        # Return JSON response
-        return jsonify([
-            {
-                "name": product.name,
-                "category": product.category,
-                "price": product.price,
-                "quantity": product.quantity,
-                "description": product.description,
-                "images": json.loads(product.images) if product.images else [],
-                "location": product.farm_location  # Replace with the correct field for farm location
-            } for product in products
-        ]), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
