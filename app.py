@@ -3,6 +3,7 @@ from flask import Flask
 from config import Config
 from extensions import db
 from models import User, Farmer, Buyer
+from routes import marketplace_routes
 from routes.marketplace_routes import marketplace_web
 from routes.registration_routes import registration_blueprint
 from routes.admin_routes import admin_blueprint
