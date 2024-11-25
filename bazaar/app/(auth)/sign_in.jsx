@@ -8,7 +8,6 @@ import { CustomButton, FormField } from "../../components";
 import api from './api';
 
 const SignIn = () => {
-  // const { setUser, setIsLogged } = useGlobalContext();
   const [isSubmitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     login: "",
