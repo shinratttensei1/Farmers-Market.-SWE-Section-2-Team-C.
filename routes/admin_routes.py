@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, redirect, url_for
 from models import db, Farmer, User, Buyer, Farm
+from models import Product
 
 admin_blueprint = Blueprint('admin', __name__)
 
@@ -141,6 +142,7 @@ def approve_user(user_id):
     return jsonify({"msg": f"User '{user.name}' approved successfully!"}), 200
 
 
+
 @admin_blueprint.route('/delete-user/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     try:
@@ -149,7 +151,11 @@ def delete_user(user_id):
         if not user:
             return jsonify({"error": "User not found"}), 404
 
+        # Check user role and delete associated data
         if user.role == 'farmer':
+            # Delete all products associated with the farmer
+            Product.query.filter_by(farmerID=user_id).delete()
+
             # Delete all farms associated with the farmer
             Farm.query.filter_by(farmerID=user_id).delete()
 
@@ -169,7 +175,6 @@ def delete_user(user_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"An error occurred while deleting the user: {str(e)}"}), 500
-
 
 
 
@@ -310,3 +315,56 @@ def enable_user(user_id):
     return jsonify({"msg": f"User '{user.name}' has been enabled."}), 200
 
 
+@admin_blueprint.route('/register-admin', methods=['POST'])
+def register_admin():
+    """
+    Allows an existing admin to register a new admin.
+    """
+    try:
+        # Get form data from the request
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        phonenumber = request.form.get('phonenumber')
+        login = request.form.get('login')  # Fetch the 'login' field
+
+        # Validate required fields
+        if not name or not email or not password or not phonenumber or not login:
+            return jsonify({"error": "All fields are required"}), 400
+
+        # Check if the email or login is already used
+        existing_user = User.query.filter((User.email == email) | (User.login == login)).first()
+        if existing_user:
+            return jsonify({"error": "Email or login already registered"}), 400
+
+        # Hash the password before storing it
+        # Create a new admin user
+        new_admin = User(
+            name=name,
+            email=email,
+            password=password,
+            phonenumber=phonenumber,
+            role='Admin',
+            isVerified=True,
+            login=login  # Include the login field
+        )
+        db.session.add(new_admin)
+        db.session.commit()
+
+        return jsonify({"msg": f"Admin '{name}' has been registered successfully!"}), 201
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"An error occurred while registering the new admin: {str(e)}"}), 500
+
+@admin_blueprint.route('/register', methods=['GET'])
+def register_admin_page():
+    """
+    Render the Admin Registration page.
+    """
+    # Check if the user is an admin
+    if 'admin_user_role' not in session or session['admin_user_role'] != 'Admin':
+        flash('Unauthorized access. Only admins can access this page.', 'danger')
+        return redirect(url_for('admin.admin_dashboard'))
+
+    return render_template('admin_register.html')

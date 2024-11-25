@@ -66,11 +66,10 @@
             const confirmAction = confirm(`Are you sure you want to ${action} ${name}?`);
             if (!confirmAction) return;
 
-
             let method;
-            if (action === 'approve' || action === 'enable' || action === 'disable') {
+            if (['approve', 'enable', 'disable'].includes(action)) {
                 method = 'PUT';
-            } else if (action === 'reject') {
+            } else if (['reject', 'delete'].includes(action)) {
                 method = 'DELETE';
             } else {
                 console.error("Unsupported action type");
@@ -81,17 +80,17 @@
 
             try {
                 const response = await fetch(url, { method });
-                const data = await response.json();
-
                 if (response.ok) {
-                    alert(data.msg);
+                    const data = await response.json();
+                    alert(data.msg || 'Operation successful.');
                     if (rowId) {
-                        document.getElementById(rowId).remove();
+                        document.getElementById(rowId).remove(); // Remove row on success
                     } else {
-                        location.reload();
+                        location.reload(); // Reload if rowId is not provided
                     }
                 } else {
-                    alert(data.error || 'An error occurred');
+                    const errorData = await response.json();
+                    alert(errorData.error || 'An error occurred.');
                 }
             } catch (error) {
                 console.error(error);
@@ -162,7 +161,7 @@
             {% for user, farmer in registered_farmers %}
             <tr id="registered-farmer-{{ user.userID }}">
                 <td><img src="{{ farmer.profilePicture }}" alt="Profile Picture"></td>
-                 <td>{{ user.name }}</td>
+                <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>{{ user.phonenumber }}</td>
                 <td>{{ farmer.resources }}</td>
