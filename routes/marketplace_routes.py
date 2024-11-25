@@ -91,3 +91,23 @@ def marketplace_api():
         "images": product.images.split(',') if product.images else [],
         "location": product.farm_location
     } for product in products]), 200
+
+def get_marketplace_products():
+    try:
+        # Fetch all products from the database
+        products = Product.query.all()
+
+        # Return JSON response
+        return jsonify([
+            {
+                "name": product.name,
+                "category": product.category,
+                "price": product.price,
+                "quantity": product.quantity,
+                "description": product.description,
+                "images": json.loads(product.images) if product.images else [],
+                "location": product.farm_location  # Replace with the correct field for farm location
+            } for product in products
+        ]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

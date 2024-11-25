@@ -24,6 +24,7 @@ app.register_blueprint(admin_blueprint, url_prefix='/admin')
 app.register_blueprint(farmer_blueprint, url_prefix='/farmer')
 app.register_blueprint(buyer_blueprint, url_prefix='/buyer')
 app.register_blueprint(marketplace_blueprint, url_prefix='/marketplace')
+app.register_blueprint(marketplace_blueprint, url_prefix='/api/marketplace')
 
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit to 16MB
