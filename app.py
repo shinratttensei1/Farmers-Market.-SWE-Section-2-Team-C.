@@ -26,6 +26,7 @@ app.register_blueprint(buyer_blueprint, url_prefix='/buyer')
 app.register_blueprint(marketplace_web, url_prefix='/marketplace')
 app.register_blueprint(user_blueprint, url_prefix='/user')
 
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit to 16MB
 

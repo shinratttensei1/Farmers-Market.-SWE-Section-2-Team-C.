@@ -1,40 +1,51 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, Image, TextInput, Picker, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import api from "../(auth)/api";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]); // Filtered products
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(""); // For name search
-  const [farmLocationQuery, setFarmLocationQuery] = useState(""); // For farm location search
+  const [farmLocationQuery, setSelectedFarm] = useState(""); // For farm location search
   const [selectedCategory, setSelectedCategory] = useState(""); // Dropdown for categories
+  const [farms, setFarms] = useState([]);
   const [sortOrder, setSortOrder] = useState(""); // "asc" or "desc"
   const [categories, setCategories] = useState([]); // Dynamic category list
 
+  const fetchProducts = async () => {
+    try {
+      const response = await api.get('marketplace'); // Use your API instance
+      if (!response || !response.data) {
+        console.log("Failed to fetch data");
+        return;
+      }
+
+      console.log("Success fetching products");
+      const data = response.data;
+
+      // Set products and filtered products
+      setProducts(data);
+      setFilteredProducts(data); // Initialize filtered products
+
+      // Extract unique categories from products
+      const uniqueCategories = [...new Set(data.map((product) => product.category))];
+      setCategories(uniqueCategories);
+
+      // const uniqueFarms = [...new Set(data.map((product) => product.farm))];
+      // setFarms(uniqueFarms);
+
+    } catch (error) {
+      console.error('Error fetching products:', error.response?.data || error.message);
+    } finally {
+      setLoading(false); // Ensure loading state is turned off
+    }
+  };
+
   // Fetch products and categories from the API
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/marketplace")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setProducts(data);
-        setFilteredProducts(data); // Initialize filtered products
-
-        // Extract unique categories from products
-        const uniqueCategories = [...new Set(data.map((product) => product.category))];
-        setCategories(uniqueCategories);
-
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-        setLoading(false);
-      });
+    fetchProducts();
   }, []);
 
   // Handle search and filters
@@ -49,11 +60,11 @@ const Products = () => {
     }
 
     // Filter by farm location
-    if (farmLocationQuery) {
-      updatedProducts = updatedProducts.filter((product) =>
-        product.location.toLowerCase().includes(farmLocationQuery.toLowerCase())
-      );
-    }
+    // if (selectedFarm) {
+    //   updatedProducts = updatedProducts.filter((product) =>
+    //     product.location.toLowerCase().includes(farmLocationQuery.toLowerCase())
+    //   );
+    // }
 
     // Filter by selected category
     if (selectedCategory) {
@@ -105,12 +116,16 @@ const Products = () => {
       />
 
       {/* Search by Farm Location */}
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search by farm location"
-        value={farmLocationQuery}
-        onChangeText={setFarmLocationQuery}
-      />
+      {/* <Picker
+        selectedValue={selectedFarm}
+        style={styles.picker}
+        onValueChange={(itemValue) => setSelectedFarm(itemValue)}
+      >
+        <Picker.Item label="All Farms" value="" />
+        {farms.map((farm, index) => (
+          <Picker.Item key={index} label={farm} value={farm} />
+        ))}
+      </Picker> */}
 
       {/* Filter by Category (Dropdown) */}
       <Picker
