@@ -37,11 +37,30 @@ def register_farmer():
 
 from models import db, Product
 
+
 @farmer_blueprint.route('/add-product', methods=['POST'])
 def add_product():
     data = request.json
+
+    # Validate if the required fields are provided
+    required_fields = ['farmerID', 'farmID', 'name', 'category', 'price', 'quantity', 'description', 'images']
+    if not all(field in data for field in required_fields):
+        return jsonify({"msg": "Missing required fields"}), 400
+
+    # Validate the farmer
+    farmer = Farmer.query.get(data['farmerID'])
+    if not farmer:
+        return jsonify({"msg": "Farmer not found"}), 404
+
+    # Validate the farm
+    farm = Farm.query.get(data['farmID'])
+    if not farm or farm.farmerID != data['farmerID']:
+        return jsonify({"msg": "Invalid farmID for the given farmer"}), 400
+
+    # Create the product
     product = Product(
         farmerID=data['farmerID'],
+        farmID=data['farmID'],  # Associate the product with a farm
         name=data['name'],
         category=data['category'],
         price=data['price'],
@@ -49,9 +68,11 @@ def add_product():
         description=data['description'],
         images=data['images']
     )
+
     db.session.add(product)
     db.session.commit()
-    return jsonify({"msg": "Product added successfully!"}), 201
+    return jsonify({"msg": "Product added successfully!", "productID": product.productID}), 201
+
 
 @farmer_blueprint.route('/update-product/<int:productID>', methods=['PUT'])
 def update_product(productID):
@@ -60,12 +81,22 @@ def update_product(productID):
         return jsonify({"msg": "Product not found"}), 404
 
     data = request.json
+
+    # Validate farmID if provided
+    if 'farmID' in data:
+        farm = Farm.query.get(data['farmID'])
+        if not farm or farm.farmerID != product.farmerID:
+            return jsonify({"msg": "Invalid farmID for the given farmer"}), 400
+
+        product.farmID = data['farmID']
+
     product.name = data.get('name', product.name)
     product.category = data.get('category', product.category)
     product.price = data.get('price', product.price)
     product.quantity = data.get('quantity', product.quantity)
     product.description = data.get('description', product.description)
     product.images = data.get('images', product.images)
+
     db.session.commit()
     return jsonify({"msg": "Product updated successfully!"}), 200
 
@@ -119,3 +150,32 @@ def get_farmer_profile(farmer_id):
         "resources": farmer.resources,
         "rating": farmer.rating,
     }), 200
+
+@farmer_blueprint.route('/farms/<int:farmer_id>', methods=['GET'])
+def get_farms_for_farmer(farmer_id):
+    try:
+        # Fetch the farmer details
+        farmer = Farmer.query.get(farmer_id)
+        if not farmer:
+            return jsonify({"error": "Farmer not found"}), 404
+
+        # Fetch all farms associated with the farmer
+        farms = Farm.query.filter_by(farmerID=farmer_id).all()
+        if not farms:
+            return jsonify({"msg": "No farms found for this farmer"}), 200
+
+        # Prepare the response data
+        farms_data = [
+            {
+                "farmID": farm.farmID,
+                "farmAddress": farm.farmAddress,
+                "typesOfCrops": farm.typesOfCrops,
+                "farmSize": farm.farmSize,
+            }
+            for farm in farms
+        ]
+
+        return jsonify({"farms": farms_data}), 200
+
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
