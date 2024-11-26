@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Dimensions, Alert, Picker } from "react-native";
-import { launchImageLibrary } from "react-native-image-picker";
+import { View, Text, ScrollView, Dimensions, Alert, Picker, Image, TouchableOpacity } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { launchImageLibrary } from "react-native-image-picker"; // Install this library if not already
 import { CustomButton, FormField } from "../../components";
 import api from "../(auth)/api";
 
 const AddProducts = () => {
+  const [farmerID, setFarmerID] = useState(null);
+  const [isFetchingID, setIsFetchingID] = useState(true);
   const [images, setImages] = useState([]);
   const [isSubmitting, setSubmitting] = useState(false);
   const [farms, setFarms] = useState([]);
@@ -19,21 +22,56 @@ const AddProducts = () => {
   });
 
   useEffect(() => {
-    fetchFarms();
+    const fetchFarmerID = async () => {
+      try {
+        const storedFarmerID = await AsyncStorage.getItem("userID");
+        if (!storedFarmerID) {
+          Alert.alert("Error", "No farmer session found. Please log in.");
+          setIsFetchingID(false);
+          return;
+        }
+        setFarmerID(storedFarmerID);
+        await fetchFarms(storedFarmerID);
+      } catch (error) {
+        console.error("Error fetching farmer ID:", error.message);
+        Alert.alert("Error", "Failed to load farmer ID. Please try again.");
+      } finally {
+        setIsFetchingID(false);
+      }
+    };
+
+    fetchFarmerID();
   }, []);
 
-  const fetchFarms = async () => {
+  const fetchFarms = async (farmerID) => {
     try {
-      const farmerID = 36; // Replace with dynamically fetched farmer ID if needed
       const response = await api.get(`/farmer/farms/${farmerID}`);
       if (response.status === 200) {
         setFarms(response.data.farms);
       } else {
-        Alert.alert("Error", "Failed to load farms. Please try again.");
+        Alert.alert("Error", "Failed to load farms.");
       }
     } catch (error) {
       console.error("Error fetching farms:", error.response?.data || error.message);
       Alert.alert("Error", "Failed to load farms.");
+    }
+  };
+
+  const pickImages = async () => {
+    try {
+      const result = await launchImageLibrary({
+        mediaTypes: "photo",
+        selectionLimit: 0, // Allows multiple selection
+        includeBase64: false,
+        quality: 1,
+      });
+
+      if (!result.didCancel && result.assets) {
+        setImages([...images, ...result.assets]);
+      }
+    } catch (error) {
+      console.error("Error picking images:", error.message);
+      Alert.alert("Error", "Failed to select images. Please try again.");
     }
   };
 
@@ -48,12 +86,18 @@ const AddProducts = () => {
     }
 
     const formData = new FormData();
-    Object.keys(form).forEach((key) => formData.append(key, form[key]));
+    formData.append("farmerID", farmerID);
     formData.append("farmID", selectedFarmID);
+    formData.append("name", form.name);
+    formData.append("category", form.category);
+    formData.append("price", form.price);
+    formData.append("quantity", form.quantity);
+    formData.append("description", form.description);
+
     images.forEach((image, index) => {
       formData.append("images", {
         uri: image.uri,
-        name: image.name || `image_${index}.jpg`,
+        name: `image_${index}.jpg`,
         type: image.type || "image/jpeg",
       });
     });
@@ -64,7 +108,7 @@ const AddProducts = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       Alert.alert("Success", response.data.msg);
-      setForm({ farmerID: "", name: "", description: "", price: "", quantity: "", category: "" });
+      setForm({ name: "", description: "", price: "", quantity: "", category: "" });
       setImages([]);
       setSelectedFarmID("");
     } catch (error) {
@@ -74,6 +118,26 @@ const AddProducts = () => {
       setSubmitting(false);
     }
   };
+
+  if (isFetchingID) {
+    return (
+      <SafeAreaView>
+        <View>
+          <Text>Loading Farmer ID...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!farmerID) {
+    return (
+      <SafeAreaView>
+        <View>
+          <Text>Error: No Farmer ID Found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="bg-black-200 h-full">
@@ -145,6 +209,23 @@ const AddProducts = () => {
             value={form.quantity}
             handleChangeText={(e) => setForm({ ...form, quantity: e })}
           />
+
+          {/* Image Picker */}
+          <View style={{ marginVertical: 10 }}>
+            <Text style={{ color: "white", fontSize: 16, marginBottom: 5 }}>Add Images</Text>
+            <TouchableOpacity onPress={pickImages} style={{ backgroundColor: "#ccc", padding: 10, borderRadius: 5 }}>
+              <Text style={{ color: "black", textAlign: "center" }}>Select Images</Text>
+            </TouchableOpacity>
+            <ScrollView horizontal style={{ marginTop: 10 }}>
+              {images.map((image, index) => (
+                <Image
+                  key={index}
+                  source={{ uri: image.uri }}
+                  style={{ width: 100, height: 100, marginRight: 10, borderRadius: 5 }}
+                />
+              ))}
+            </ScrollView>
+          </View>
 
           {/* Submit */}
           <CustomButton
