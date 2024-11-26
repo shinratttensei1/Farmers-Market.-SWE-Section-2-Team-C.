@@ -29,6 +29,15 @@ const SignIn = () => {
       };
   
       const response = await api.post('auth/app/login', payload);
+      if (response.data.user) {
+
+        await AsyncStorage.setItem("userID", response.data.user.userID.toString());
+        await AsyncStorage.setItem("userRole", response.data.user.role);
+
+        Alert.alert("Success", response.data.msg);
+
+        navigation.replace("/dashboard");
+      }
       Alert.alert('Success', response.data.msg);
       router.replace('/profile');
     } catch (error) {
