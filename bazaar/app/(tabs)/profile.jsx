@@ -5,6 +5,7 @@ import api from '../(auth)/api';
 
 const Profile = () => {
   const [farmer, setFarmer] = useState(null);
+  const [farmerID, setFarmerID] = useState(null);
   const [farms, setFarms] = useState([]);
   const [products, setProducts] = useState([]);
   const [farmAddress, setFarmAddress] = useState('');
@@ -17,8 +18,14 @@ const Profile = () => {
 
   useEffect(() => {
     fetchUserData();
-    fetchProducts();
   }, []);
+
+  useEffect(() => {
+    if (farmerID) {
+      console.log("Farmer ID has been set:", farmerID);
+      fetchProducts(farmerID);
+    }
+  }, [farmerID]);
 
   const fetchUserData = async () => {
     try {
@@ -30,19 +37,16 @@ const Profile = () => {
       const storedUserRole = await AsyncStorage.getItem("userRole");
       console.log(storedUserID);
       console.log(storedUserRole);
-      const response = await api.get(`/profile/${storedUserID}`);
-      console.log(response);
-      const userData = response.data;
-      console.log(userData);
-  
-      if (storedUserRole == 'farmer'){
+      if(storedUserRole == 'farmer'){
+        const response = await api.get(`/farmer/profile/${storedUserID}`);
+        const userData = response.data;
+        const farmerID = storedUserID;
+        setFarmerID(farmerID);
         setFarmer(userData.farmer);
         setFarms(userData.farms);
-        if (userData.farmer && userData.farmer.id) {
-          fetchProducts(userData.farmer.id);
-        } else {
-          console.error("Farmer ID not found in user data");
-        }
+      }
+      else {
+        const response = await api.get(`/buyer/profile/${storedUserID}`);
       }
 
     } catch (error) {
@@ -53,10 +57,11 @@ const Profile = () => {
   const fetchProducts = async (farmerID) => {
     try {
       if (!farmerID) {
+        console.log(farmerID);
         console.error("Farmer ID is undefined. Cannot fetch products.");
         return;
       }
-      const response = await api.get(`/products/${farmerID}`);
+      const response = await api.get(`/buyer/products/${farmerID}`);
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error.response?.data || error.message);

@@ -102,7 +102,7 @@ def add_farm_to_farmer(farmer_id):
     return jsonify({"msg": f"Farm created successfully for Farmer ID {farmer_id}!", "farmID": new_farm.farmID}), 201
 
 
-@farmer_blueprint.route('/farmer/<int:farmer_id>', methods=['GET'])
+@farmer_blueprint.route('/profile/<int:farmer_id>', methods=['GET'])
 def get_farmer_profile(farmer_id):
     farmer = Farmer.query.get(farmer_id)
     user = User.query.get(farmer_id)

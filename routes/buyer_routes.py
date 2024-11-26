@@ -64,7 +64,7 @@ def get_products():
     return jsonify(response), 200
 
 
-@buyer_blueprint.route('/buyer/<int:buyer_id>', methods=['GET'])
+@buyer_blueprint.route('/profile/<int:buyer_id>', methods=['GET'])
 def get_buyer_profile(buyer_id):
     buyer = Buyer.query.get(buyer_id)
     user = User.query.get(buyer_id)
