@@ -62,3 +62,20 @@ def get_products():
             "images": product.images,
         })
     return jsonify(response), 200
+
+
+@buyer_blueprint.route('/profile/<int:buyer_id>', methods=['GET'])
+def get_buyer_profile(buyer_id):
+    buyer = Buyer.query.get(buyer_id)
+    user = User.query.get(buyer_id)
+
+    if not buyer or not user:
+        return jsonify({"error": "Buyer not found"}), 404
+
+    return jsonify({
+        "name": user.name,
+        "email": user.email,
+        "phonenumber": user.phonenumber,
+        "deliveryAddress": buyer.deliveryAddress,
+        "paymentMethod": buyer.paymentMethod,
+    }), 200

@@ -100,3 +100,22 @@ def add_farm_to_farmer(farmer_id):
     db.session.commit()
 
     return jsonify({"msg": f"Farm created successfully for Farmer ID {farmer_id}!", "farmID": new_farm.farmID}), 201
+
+
+@farmer_blueprint.route('/profile/<int:farmer_id>', methods=['GET'])
+def get_farmer_profile(farmer_id):
+    farmer = Farmer.query.get(farmer_id)
+    user = User.query.get(farmer_id)
+
+    if not farmer or not user:
+        return jsonify({"error": "Farmer not found"}), 404
+
+    return jsonify({
+        "name": user.name,
+        "email": user.email,
+        "phonenumber": user.phonenumber,
+        "govermentIssuedID": farmer.govermentIssuedID,
+        "profilePicture": farmer.profilePicture,
+        "resources": farmer.resources,
+        "rating": farmer.rating,
+    }), 200
