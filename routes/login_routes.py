@@ -39,3 +39,16 @@ def login_app():
     except Exception as e:
         print(f"Error during login: {e}")
         return jsonify({"error": "Something went wrong"}), 500
+    
+@login_blueprint.route('/users/<int:user_id>', methods=['GET'])
+def get_user_by_id(user_id):
+    user = User.query.filter_by(userID=user_id).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return jsonify({
+        "userID": user.userID,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role
+    }), 200

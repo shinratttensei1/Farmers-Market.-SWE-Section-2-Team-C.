@@ -9,41 +9,36 @@ import {
   Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Profile = ({ userID, role }) => {
   const [profileData, setProfileData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const SERVER_URL = "https://sersidw.pythonanywhere.com/"; // Replace `192.168.x.x` with your local machine IP address
+  const SERVER_URL = "https://sersidw.pythonanywhere.com/";
 
   useEffect(() => {
-    const fetchProfileData = async () => {
+    const fetchUserData = async () => {
       try {
-        const endpoint =
-          role === "farmer"
-            ? `${SERVER_URL}/farmer/profile/${userID}`
-            : `${SERVER_URL}/buyer/profile/${userID}`;
+        const storedUserID = await AsyncStorage.getItem("userID");
+        if (storedUserID) {
+          setUserID(storedUserID);
 
-        console.log("Fetching profile data from:", endpoint);
-
-        const response = await fetch(endpoint);
-
-        if (!response.ok) {
-          throw new Error(`Failed to fetch profile: ${response.statusText}`);
+          // Fetch user-specific data using the userID
+          const response = await api.get(`/users/${storedUserID}`); // Adjust endpoint as needed
+          setUserData(response.data);
+        } else {
+          console.error("User ID not found in AsyncStorage");
         }
-
-        const data = await response.json();
-        console.log("Profile data fetched successfully:", data);
-
-        setProfileData(data);
-      }
-      finally {
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchProfileData();
-  }, [userID, role]);
+    fetchUserData();
+  }, []);
 
   if (loading) {
     return (
@@ -53,7 +48,7 @@ const Profile = ({ userID, role }) => {
     );
   }
 
-  if (!profileData) {
+  if (!userData) {
     return (
       <SafeAreaView style={styles.container}>
         <Text style={styles.errorText}>Unable to load profile data.</Text>
@@ -66,63 +61,78 @@ const Profile = ({ userID, role }) => {
       ? profileData.profilePicture
       : `${SERVER_URL}/static/uploads/${profileData.profilePicture}`;
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>
-        {role === "farmer" ? "Farmer Profile" : "Buyer Profile"}
-      </Text>
-      <Image
-        source={{ uri: profileImageUrl || "https://via.placeholder.com/150" }}
-        style={styles.profileImage}
-      />
-      <View style={styles.infoContainer}>
-        <Text style={styles.infoText}>
-          <Text style={styles.label}>Name:</Text> {profileData.name}
-        </Text>
-        <Text style={styles.infoText}>
-          <Text style={styles.label}>Email:</Text> {profileData.email}
-        </Text>
-        <Text style={styles.infoText}>
-          <Text style={styles.label}>Phone:</Text> {profileData.phonenumber}
-        </Text>
-        {role === "farmer" && (
-          <>
-            <Text style={styles.infoText}>
-              <Text style={styles.label}>Government ID:</Text>{" "}
-              {profileData.govermentIssuedID}
-            </Text>
-            <Text style={styles.infoText}>
-              <Text style={styles.label}>Resources:</Text>{" "}
-              {profileData.resources}
-            </Text>
-            <Text style={styles.infoText}>
-              <Text style={styles.label}>Rating:</Text>{" "}
-              {profileData.rating || "Not Rated"}
-            </Text>
-          </>
-        )}
-        {role === "buyer" && (
-          <>
-            <Text style={styles.infoText}>
-              <Text style={styles.label}>Delivery Address:</Text>{" "}
-              {profileData.deliveryAddress}
-            </Text>
-            <Text style={styles.infoText}>
-              <Text style={styles.label}>Payment Method:</Text>{" "}
-              {profileData.paymentMethod}
-            </Text>
-          </>
-        )}
-      </View>
-      {role === "farmer" && (
-        <Button
-          title="Add Farm"
-          onPress={() => console.log("Navigate to Add Farm Page")}
-          color="#28a745"
-        />
-      )}
-    </SafeAreaView>
-  );
+//   return (
+//     <SafeAreaView style={styles.container}>
+//       <Text style={styles.title}>
+//         {role === "farmer" ? "Farmer Profile" : "Buyer Profile"}
+//       </Text>
+//       <Image
+//         source={{ uri: profileImageUrl || "https://via.placeholder.com/150" }}
+//         style={styles.profileImage}
+//       />
+//       <View style={styles.infoContainer}>
+//         <Text style={styles.infoText}>
+//           <Text style={styles.label}>Name:</Text> {profileData.name}
+//         </Text>
+//         <Text style={styles.infoText}>
+//           <Text style={styles.label}>Email:</Text> {profileData.email}
+//         </Text>
+//         <Text style={styles.infoText}>
+//           <Text style={styles.label}>Phone:</Text> {profileData.phonenumber}
+//         </Text>
+//         {role === "farmer" && (
+//           <>
+//             <Text style={styles.infoText}>
+//               <Text style={styles.label}>Government ID:</Text>{" "}
+//               {profileData.govermentIssuedID}
+//             </Text>
+//             <Text style={styles.infoText}>
+//               <Text style={styles.label}>Resources:</Text>{" "}
+//               {profileData.resources}
+//             </Text>
+//             <Text style={styles.infoText}>
+//               <Text style={styles.label}>Rating:</Text>{" "}
+//               {profileData.rating || "Not Rated"}
+//             </Text>
+//           </>
+//         )}
+//         {role === "buyer" && (
+//           <>
+//             <Text style={styles.infoText}>
+//               <Text style={styles.label}>Delivery Address:</Text>{" "}
+//               {profileData.deliveryAddress}
+//             </Text>
+//             <Text style={styles.infoText}>
+//               <Text style={styles.label}>Payment Method:</Text>{" "}
+//               {profileData.paymentMethod}
+//             </Text>
+//           </>
+//         )}
+//       </View>
+//       {role === "farmer" && (
+//         <Button
+//           title="Add Farm"
+//           onPress={() => console.log("Navigate to Add Farm Page")}
+//           color="#28a745"
+//         />
+//       )}
+//     </SafeAreaView>
+//   );
+// };
+
+return (
+  <View style={styles.container}>
+    <Text style={styles.title}>Profile</Text>
+    <Text style={styles.label}>User ID:</Text>
+    <Text style={styles.value}>{userID}</Text>
+    <Text style={styles.label}>Name:</Text>
+    <Text style={styles.value}>{userData.name}</Text>
+    <Text style={styles.label}>Email:</Text>
+    <Text style={styles.value}>{userData.email}</Text>
+    <Text style={styles.label}>Role:</Text>
+    <Text style={styles.value}>{userData.role}</Text>
+  </View>
+);
 };
 
 export default Profile;
