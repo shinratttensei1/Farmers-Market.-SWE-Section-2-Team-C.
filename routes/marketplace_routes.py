@@ -2,7 +2,7 @@ import os
 import json
 from flask import Blueprint, request, jsonify, render_template
 from werkzeug.utils import secure_filename
-from models import db, Product, User
+from models import db, Product, User, Farm
 
 # Single blueprint for both web and API functionality
 marketplace_web = Blueprint('marketplace_web', __name__)
@@ -14,36 +14,41 @@ def marketplace_page():
 
 @marketplace_web.route('/', methods=['GET'])
 def marketplace_fetch():
-    """
-    Serve marketplace products as a webpage or JSON API based on request type.
-    """
-    products = Product.query.all()
+    try:
+        products = Product.query.join(Farm, Product.farmID == Farm.farmID).add_columns(
+            Product.name,
+            Product.category,
+            Product.quantity,
+            Product.price,
+            Product.description,
+            Product.images,
+            Farm.farmAddress.label('farmAddress')
+        ).all()
 
-    # Check if the request asks for JSON response
-    if request.accept_mimetypes['application/json'] or request.args.get('format') == 'json':
-        return jsonify([
-            {
-                "name": product.name,
-                "category": product.category,
-                "price": product.price,
-                "quantity": product.quantity,
-                "description": product.description,
-                "images": json.loads(product.images) if isinstance(product.images, str) else product.images,
-                "location": getattr(product, "farm_location", "Unknown")
-            }
-            for product in products
-        ]), 200
+        if request.accept_mimetypes['application/json'] or request.args.get('format') == 'json':
+            return jsonify([
+                {
+                    "name": product.name,
+                    "category": product.category,
+                    "price": product.price,
+                    "quantity": product.quantity,
+                    "description": product.description,
+                    "images": json.loads(product.images) if isinstance(product.images, str) else product.images,
+                    "farmAddress": product.farmAddress
+                }
+                for product in products
+            ]), 200
 
-    # Default to rendering the webpage
-    return render_template('marketplace.html', products=products)
+        return render_template('marketplace.html', products=products)
+
+    except Exception as e:
+        print(f"Error in marketplace_fetch: {e}")
+        return jsonify({"error": str(e)}), 500
 
 @marketplace_web.route('/add-product', methods=['POST'])
 def add_product():
-    """
-    Allow farmers to publish their products to the marketplace with multiple images.
-    """
     data = request.form
-    required_fields = ['name', 'description', 'price', 'quantity', 'farmerID', 'category']
+    required_fields = ['name', 'description', 'price', 'quantity', 'farmerID', 'category', 'farmID']
 
     for field in required_fields:
         if field not in data:
@@ -70,7 +75,8 @@ def add_product():
         price=float(data['price']),
         quantity=int(data['quantity']),
         farmerID=int(data['farmerID']),
-        images=json.dumps(image_paths)
+        images=json.dumps(image_paths),
+        farmID=data['farmID']
     )
     db.session.add(new_product)
     db.session.commit()

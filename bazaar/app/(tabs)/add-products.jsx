@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { View, Text, ScrollView, Dimensions, Alert, Picker, Image, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Dimensions,
+  Alert,
+  Picker,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { launchImageLibrary } from "react-native-image-picker"; // Install this library if not already
+import { launchImageLibrary } from "react-native-image-picker";
 import { CustomButton, FormField } from "../../components";
 import api from "../(auth)/api";
 
@@ -19,6 +28,8 @@ const AddProducts = () => {
     price: "",
     quantity: "",
     category: "",
+    images: "",
+    farmID: ""
   });
 
   useEffect(() => {
@@ -45,9 +56,10 @@ const AddProducts = () => {
 
   const fetchFarms = async (farmerID) => {
     try {
-      const response = await api.get(`/farmer/farms/${farmerID}`);
+      const response = await api.get(`/farmer/profile/${farmerID}`);
       if (response.status === 200) {
         setFarms(response.data.farms);
+        console.log(response.data.farms)
       } else {
         Alert.alert("Error", "Failed to load farms.");
       }
@@ -60,7 +72,7 @@ const AddProducts = () => {
   const pickImages = async () => {
     try {
       const result = await launchImageLibrary({
-        mediaTypes: "photo",
+        mediaType: "photo",
         selectionLimit: 0, // Allows multiple selection
         includeBase64: false,
         quality: 1,
@@ -68,6 +80,11 @@ const AddProducts = () => {
 
       if (!result.didCancel && result.assets) {
         setImages([...images, ...result.assets]);
+      } else if (result.didCancel) {
+        console.log("User canceled image picker");
+      } else if (result.errorCode) {
+        console.error("Image Picker Error:", result.errorMessage);
+        Alert.alert("Error", "Failed to select images.");
       }
     } catch (error) {
       console.error("Error picking images:", error.message);
@@ -87,12 +104,12 @@ const AddProducts = () => {
 
     const formData = new FormData();
     formData.append("farmerID", farmerID);
-    formData.append("farmID", selectedFarmID);
     formData.append("name", form.name);
     formData.append("category", form.category);
     formData.append("price", form.price);
     formData.append("quantity", form.quantity);
     formData.append("description", form.description);
+    formData.append("farmID", selectedFarmID);
 
     images.forEach((image, index) => {
       formData.append("images", {
@@ -111,6 +128,7 @@ const AddProducts = () => {
       setForm({ name: "", description: "", price: "", quantity: "", category: "" });
       setImages([]);
       setSelectedFarmID("");
+      alert("Your product has been successfully added!");
     } catch (error) {
       console.error("Error adding product:", error.response?.data || error.message);
       Alert.alert("Error", "Failed to add product. Please try again.");
@@ -213,9 +231,12 @@ const AddProducts = () => {
           {/* Image Picker */}
           <View style={{ marginVertical: 10 }}>
             <Text style={{ color: "white", fontSize: 16, marginBottom: 5 }}>Add Images</Text>
-            <TouchableOpacity onPress={pickImages} style={{ backgroundColor: "#ccc", padding: 10, borderRadius: 5 }}>
-              <Text style={{ color: "black", textAlign: "center" }}>Select Images</Text>
-            </TouchableOpacity>
+            <CustomButton
+            title="Select Images"
+            handlePress={pickImages}
+            isLoading={isSubmitting}
+            containerStyles="mt-7"
+            />
             <ScrollView horizontal style={{ marginTop: 10 }}>
               {images.map((image, index) => (
                 <Image
@@ -226,7 +247,7 @@ const AddProducts = () => {
               ))}
             </ScrollView>
           </View>
-
+          
           {/* Submit */}
           <CustomButton
             title="Add Product"

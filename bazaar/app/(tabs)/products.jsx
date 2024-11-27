@@ -1,79 +1,82 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, FlatList, Image, TextInput, Picker, StyleSheet, TouchableOpacity, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  TextInput,
+  Picker,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  Modal,
+  Button,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import api from "../(auth)/api";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]); // Filtered products
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(""); // For name search
-  const [farmLocationQuery, setSelectedFarm] = useState(""); // For farm location search
-  const [selectedCategory, setSelectedCategory] = useState(""); // Dropdown for categories
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedFarm, setSelectedFarm] = useState("");
+  const [sortOrder, setSortOrder] = useState("");
+  const [categories, setCategories] = useState([]);
   const [farms, setFarms] = useState([]);
-  const [sortOrder, setSortOrder] = useState(""); // "asc" or "desc"
-  const [categories, setCategories] = useState([]); // Dynamic category list
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-  const fetchProducts = async () => {
-    try {
-      const response = await api.get('marketplace'); // Use your API instance
-      if (!response || !response.data) {
-        console.log("Failed to fetch data");
-        return;
-      }
+  const DEFAULT_IMAGE =
+    "https://sersidw.pythonanywhere.com/static/uploads/default.jpg";
 
-      console.log("Success fetching products");
-      const data = response.data;
-
-      // Set products and filtered products
-      setProducts(data);
-      setFilteredProducts(data); // Initialize filtered products
-
-      // Extract unique categories from products
-      const uniqueCategories = [...new Set(data.map((product) => product.category))];
-      setCategories(uniqueCategories);
-
-      // const uniqueFarms = [...new Set(data.map((product) => product.farm))];
-      // setFarms(uniqueFarms);
-
-    } catch (error) {
-      console.error('Error fetching products:', error.response?.data || error.message);
-    } finally {
-      setLoading(false); // Ensure loading state is turned off
-    }
-  };
-
-  // Fetch products and categories from the API
   useEffect(() => {
-    fetchProducts();
+    fetch("http://127.0.0.1:5000/marketplace")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setProducts(data);
+        setFilteredProducts(data);
+
+        const uniqueFarms = [...new Set(data.map((product) => product.farmAddress))];
+        setFarms(uniqueFarms);
+
+        const uniqueCategories = [...new Set(data.map((product) => product.category))];
+        setCategories(uniqueCategories);
+
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching products:", error);
+        setLoading(false);
+      });
   }, []);
 
   // Handle search and filters
   useEffect(() => {
     let updatedProducts = [...products];
 
-    // Filter by name search query
     if (searchQuery) {
       updatedProducts = updatedProducts.filter((product) =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
-    // Filter by farm location
-    // if (selectedFarm) {
-    //   updatedProducts = updatedProducts.filter((product) =>
-    //     product.location.toLowerCase().includes(farmLocationQuery.toLowerCase())
-    //   );
-    // }
+    if (selectedFarm) {
+      updatedProducts = updatedProducts.filter(
+        (product) => product.farmAddress === selectedFarm
+      );
+    }
 
-    // Filter by selected category
     if (selectedCategory) {
       updatedProducts = updatedProducts.filter(
         (product) => product.category === selectedCategory
       );
     }
 
-    // Sort by price
     if (sortOrder === "asc") {
       updatedProducts.sort((a, b) => a.price - b.price);
     } else if (sortOrder === "desc") {
@@ -81,22 +84,23 @@ const Products = () => {
     }
 
     setFilteredProducts(updatedProducts);
-  }, [searchQuery, farmLocationQuery, selectedCategory, sortOrder]);
+  }, [searchQuery, selectedFarm, selectedCategory, sortOrder]);
 
   // Render individual product
   const renderProduct = ({ item }) => {
     const mainImage =
-      item.images && item.images.length > 0
-        ? item.images[0]
-        : "https://sersidw.pythonanywhere.com/static/uploads/default.jpg";
+      item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE;
 
     return (
-      <TouchableOpacity style={styles.productCard}>
+      <TouchableOpacity
+        style={styles.productCard}
+        onPress={() => setSelectedProduct(item)} // Set selected product for modal
+      >
         <Image source={{ uri: mainImage }} style={styles.productImage} />
         <View style={styles.productDetails}>
           <Text style={styles.productName}>{item.name}</Text>
           <Text style={styles.productCategory}>{item.category || "No Category"}</Text>
-          <Text style={styles.productLocation}>Farm: {item.location || "Unknown"}</Text>
+          <Text style={styles.productFarm}>Farm: {item.farmAddress || "Unknown"}</Text>
           <Text style={styles.productPrice}>${parseFloat(item.price).toFixed(2)}</Text>
         </View>
       </TouchableOpacity>
@@ -107,7 +111,6 @@ const Products = () => {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Marketplace</Text>
 
-      {/* Search by Name */}
       <TextInput
         style={styles.searchInput}
         placeholder="Search by product name"
@@ -115,19 +118,17 @@ const Products = () => {
         onChangeText={setSearchQuery}
       />
 
-      {/* Search by Farm Location */}
-      {/* <Picker
+      <Picker
         selectedValue={selectedFarm}
         style={styles.picker}
         onValueChange={(itemValue) => setSelectedFarm(itemValue)}
       >
         <Picker.Item label="All Farms" value="" />
-        {farms.map((farm, index) => (
-          <Picker.Item key={index} label={farm} value={farm} />
+        {farms.map((farmAddress, index) => (
+          <Picker.Item key={index} label={farmAddress} value={farmAddress} />
         ))}
-      </Picker> */}
+      </Picker>
 
-      {/* Filter by Category (Dropdown) */}
       <Picker
         selectedValue={selectedCategory}
         style={styles.picker}
@@ -139,7 +140,6 @@ const Products = () => {
         ))}
       </Picker>
 
-      {/* Sort by Price */}
       <View style={styles.sortButtons}>
         <TouchableOpacity
           style={styles.sortButton}
@@ -155,7 +155,6 @@ const Products = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Product List */}
       {loading ? (
         <ActivityIndicator size="large" color="#007bff" />
       ) : filteredProducts.length === 0 ? (
@@ -167,6 +166,41 @@ const Products = () => {
           renderItem={renderProduct}
           contentContainerStyle={styles.listContent}
         />
+      )}
+
+      {/* Modal for Product Details */}
+      {selectedProduct && (
+        <Modal
+          visible={!!selectedProduct}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setSelectedProduct(null)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Image
+                source={{
+                  uri:
+                    selectedProduct.images && selectedProduct.images.length > 0
+                      ? selectedProduct.images[0]
+                      : DEFAULT_IMAGE,
+                }}
+                style={styles.modalImage}
+              />
+              <Text style={styles.modalTitle}>{selectedProduct.name}</Text>
+              <Text style={styles.modalCategory}>
+                {selectedProduct.category || "No Category"}
+              </Text>
+              <Text style={styles.modalDescription}>
+                {selectedProduct.description || "No description available."}
+              </Text>
+              <Text style={styles.modalPrice}>
+                Price: ${parseFloat(selectedProduct.price).toFixed(2)}
+              </Text>
+              <Button title="Close" onPress={() => setSelectedProduct(null)} />
+            </View>
+          </View>
+        </Modal>
       )}
     </SafeAreaView>
   );
@@ -240,7 +274,7 @@ const styles = StyleSheet.create({
     color: "#888",
     marginBottom: 5,
   },
-  productLocation: {
+  productFarm: {
     fontSize: 14,
     color: "#555",
     marginBottom: 5,
@@ -255,6 +289,46 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 18,
     color: "#555",
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalImage: {
+    width: "100%",
+    height: 200,
+    marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  modalCategory: {
+    fontSize: 16,
+    color: "#888",
+    marginBottom: 10,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalPrice: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#28a745",
+    marginBottom: 10,
   },
 });
 

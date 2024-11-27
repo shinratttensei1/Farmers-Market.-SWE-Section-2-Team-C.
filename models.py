@@ -12,7 +12,6 @@ class User(db.Model):
     isVerified = db.Column(db.Boolean, nullable=False, default=False)
     name = db.Column(db.String(64), nullable=False)
 
-
 class Farmer(db.Model):
     __tablename__ = 'farmers'
 
@@ -45,10 +44,9 @@ class Farm(db.Model):
     def __repr__(self):
         return f'<Farm {self.farmID}, Address: {self.farmAddress}, FarmerID: {self.farmerID}>'
 
-from extensions import db
-
 
 class Product(db.Model):
+    __tablename__ = 'product'
     productID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     farmerID = db.Column(db.Integer, db.ForeignKey('farmers.farmerID'), nullable=False)
     name = db.Column(db.String(64), nullable=False)
@@ -56,4 +54,5 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text, nullable=True)
-    images = db.Column(db.JSON, nullable=True)  # Store as JSON
+    images = db.Column(db.JSON, nullable=True)
+    farmID = db.Column(db.Integer, db.ForeignKey('farms.farmID'), nullable=False)

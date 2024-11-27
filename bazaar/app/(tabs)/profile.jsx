@@ -8,20 +8,46 @@ import {
   StyleSheet,
   TextInput,
   Button,
+  FlatList,
+  Modal,
+  TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../(auth)/api";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
-  const [roleDetails, setRoleDetails] = useState(null); // Role-specific details
+  const [farms, setFarms] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Farm addition states
+
   const [farmAddress, setFarmAddress] = useState("");
   const [typesOfCrops, setTypesOfCrops] = useState("");
   const [farmSize, setFarmSize] = useState("");
 
+
+  const [selectedFarm, setSelectedFarm] = useState(null);
+  const [productName, setProductName] = useState("");
+  const [productCategory, setProductCategory] = useState("");
+  const [productPrice, setProductPrice] = useState("");
+  const [productQuantity, setProductQuantity] = useState("");
+  const [productDescription, setProductDescription] = useState("");
+  const [productImages, setProductImages] = useState("");
+
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const startEditingProduct = (product) => {
+  setEditingProduct(product);
+  setProductName(product.name);
+  setProductCategory(product.category);
+  setProductPrice(product.price.toString());
+  setProductQuantity(product.quantity.toString());
+  setProductDescription(product.description);
+  setProductImages(product.images);
+  setIsModalVisible(true);
+};
   useEffect(() => {
     fetchUserData();
   }, []);
@@ -30,87 +56,138 @@ const Profile = () => {
     try {
       setLoading(true);
 
-      // Fetch userID from AsyncStorage
-      const storedUserID = await AsyncStorage.getItem("userID");
-      if (!storedUserID) {
+      const userID = await AsyncStorage.getItem("userID");
+      if (!userID) {
         Alert.alert("Error", "No user session found. Please log in.");
         setLoading(false);
         return;
       }
 
-      // Fetch the user's role dynamically
-      const roleResponse = await api.get(`http://127.0.0.1:5000/user/${storedUserID}`);
-      if (roleResponse.status !== 200 || !roleResponse.data.role) {
-        throw new Error("Failed to fetch user role.");
-      }
+      const response = await api.get(`http://127.0.0.1:5000/farmer/profile/${userID}`);
+      const data = response.data;
 
-      const userRole = roleResponse.data.role;
-
-      // Fetch common user details
-      const userResponse = await api.get(
-        `http://127.0.0.1:5000/${userRole}/profile/${storedUserID}`
-      );
-
-      if (userResponse.status !== 200) {
-        throw new Error(`Failed to fetch profile. Status code: ${userResponse.status}`);
-      }
-
-      const userData = userResponse.data;
-      setUser({ ...userData, role: userRole });
-
-      // Fetch role-specific details
-      if (userRole === "farmer") {
-        const farmerResponse = await api.get(
-          `http://127.0.0.1:5000/farmer/profile/${storedUserID}`
-        );
-        if (farmerResponse.status === 200) {
-          setRoleDetails(farmerResponse.data);
-        } else {
-          console.error("Failed to fetch farmer details.");
-        }
-      } else if (userRole === "buyer") {
-        const buyerResponse = await api.get(
-          `http://127.0.0.1:5000/buyer/details/${storedUserID}`
-        );
-        if (buyerResponse.status === 200) {
-          setRoleDetails(buyerResponse.data);
-        } else {
-          console.error("Failed to fetch buyer details.");
-        }
-      }
+      setUser(data);
+      setFarms(data.farms || []);
+      fetchProducts(userID);
     } catch (error) {
-      console.error("Error fetching user data:", error);
-      Alert.alert("Error", "Failed to load user information.");
+      console.error("Error fetching farmer data:", error);
+      Alert.alert("Error", "Failed to load farmer data.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddFarm = async () => {
-    if (!farmAddress || !typesOfCrops || !farmSize) {
-      Alert.alert("Error", "Please fill in all fields.");
-      return;
+  const fetchProducts = async (farmerID) => {
+    try {
+      const response = await api.get(`http://127.0.0.1:5000/farmer/products/${farmerID}`);
+      setProducts(response.data || []);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      Alert.alert("Error", "Failed to load products.");
     }
+  };
+
+ const handleAddFarm = async () => {
+  if (!farmAddress || !typesOfCrops || !farmSize) {
+    Alert.alert("Error", "Please fill in all fields.");
+    return;
+  }
+
+  try {
+    const farmerID = await AsyncStorage.getItem("userID");
+    const response = await api.post(`/farmer/add-farm/${farmerID}`, {
+      farmAddress,
+      typesOfCrops,
+      farmSize: parseFloat(farmSize),
+    });
+
+    Alert.alert("Success", response.data.msg);
+    setFarmAddress("");
+    setTypesOfCrops("");
+    setFarmSize("");
+    fetchUserData();
+  } catch (error) {
+    console.error("Error adding farm:", error);
+    Alert.alert("Error", "Failed to add farm.");
+  }
+};
+
+  // const handleAddProduct = async () => {
+  //   if (
+  //     !selectedFarm ||
+  //     !productName ||
+  //     !productCategory ||
+  //     !productPrice ||
+  //     !productQuantity ||
+  //     !productDescription
+  //   ) {
+  //     Alert.alert("Error", "Please fill in all fields.");
+  //     return;
+  //   }
+
+  //   try {
+  //     if (!user || !user.id) {
+  //       Alert.alert("Error", "User is not authenticated.");
+  //       return;
+  //     }
+
+  //     const farmerID = user.id;
+  //     const response = await api.post("http://127.0.0.1:5000/farmer/add-product", {
+  //       farmerID,
+  //       farmID: selectedFarm,
+  //       name: productName,
+  //       category: productCategory,
+  //       price: parseFloat(productPrice),
+  //       quantity: parseInt(productQuantity, 10),
+  //       description: productDescription,
+  //       images: productImages,
+  //     });
+
+  //     Alert.alert("Success", response.data.msg);
+  //     setProductName("");
+  //     setProductCategory("");
+  //     setProductPrice("");
+  //     setProductQuantity("");
+  //     setProductDescription("");
+  //     setProductImages("");
+  //     fetchProducts(farmerID);
+  //   } catch (error) {
+  //     console.error("Error adding product:", error);
+  //     Alert.alert("Error", "Failed to add product.");
+  //   }
+  // };
+
+  const handleEditProduct = async () => {
+    if (!editingProduct) return;
 
     try {
-      const storedUserID = await AsyncStorage.getItem("userID");
-      const response = await api.post(`/farmer/add-farm/${storedUserID}`, {
-        farmAddress,
-        typesOfCrops,
-        farmSize: parseFloat(farmSize),
+      await api.put(`http://127.0.0.1:5000/farmer/update-product/${editingProduct.id}`, {
+        name: productName,
+        category: productCategory,
+        price: parseFloat(productPrice),
+        quantity: parseInt(productQuantity, 10),
+        description: productDescription,
+        images: productImages,
       });
 
-      if (response.status === 201) {
-        Alert.alert("Success", response.data.msg);
-        setFarmAddress("");
-        setTypesOfCrops("");
-        setFarmSize("");
-      } else {
-        throw new Error("Failed to add farm.");
-      }
+      Alert.alert("Success", "Product updated successfully.");
+      setIsModalVisible(false);
+      setEditingProduct(null);
+      fetchProducts(user.id);
     } catch (error) {
-      console.error("Error adding farm:", error);
-      Alert.alert("Error", "Failed to add farm. Please try again.");
+      console.error("Error updating product:", error);
+      Alert.alert("Error", "Failed to update product.");
+    }
+  };
+
+  const handleDeleteProduct = async (productID) => {
+    try {
+      await api.delete(`http://127.0.0.1:5000/farmer/delete-product/${productID}`);
+      Alert.alert("Success", "Product deleted successfully.");
+      fetchProducts(user.id);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      Alert.alert("Error", "Failed to delete product.");
     }
   };
 
@@ -118,15 +195,7 @@ const Profile = () => {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007bff" />
-        <Text>Loading user information...</Text>
-      </View>
-    );
-  }
-
-  if (!user) {
-    return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Unable to load user information.</Text>
+        <Text>Loading profile...</Text>
       </View>
     );
   }
@@ -134,61 +203,124 @@ const Profile = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileContainer}>
-        <Text style={styles.title}>User Profile</Text>
+        <Text style={styles.title}>Farmer Profile</Text>
         <Text style={styles.info}>Name: {user.name}</Text>
         <Text style={styles.info}>Email: {user.email}</Text>
         <Text style={styles.info}>Phone: {user.phonenumber}</Text>
-        <Text style={styles.info}>Role: {user.role}</Text>
       </View>
 
-      {/* Role-Specific Details */}
-      {roleDetails && user.role === "farmer" && (
-        <View style={styles.roleDetailsContainer}>
-          <Text style={styles.title}>Farmer Details</Text>
-          <Text style={styles.info}>
-            Government ID: {roleDetails.govermentIssuedID}
-          </Text>
-          <Text style={styles.info}>Resources: {roleDetails.resources}</Text>
-          <Text style={styles.info}>Rating: {roleDetails.rating || "Not Rated"}</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Farms</Text>
+        <FlatList
+          data={farms}
+          keyExtractor={(item) => item.farmID.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.farmCard}>
+              <Text style={styles.cardText}>Address: {item.farmAddress}</Text>
+              <Text style={styles.cardText}>Crops: {item.typesOfCrops}</Text>
+              <Text style={styles.cardText}>Size: {item.farmSize} acres</Text>
+            </View>
+          )}
+        />
 
-          {/* Add Farm Section */}
-          <View style={styles.addFarmContainer}>
-            <Text style={styles.sectionTitle}>Add a New Farm</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Farm Address"
-              value={farmAddress}
-              onChangeText={setFarmAddress}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Types of Crops"
-              value={typesOfCrops}
-              onChangeText={setTypesOfCrops}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Farm Size (acres)"
-              value={farmSize}
-              onChangeText={setFarmSize}
-              keyboardType="numeric"
-            />
-            <Button title="Add Farm" onPress={handleAddFarm} />
+        <Text style={styles.subTitle}>Add a Farm</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Farm Address"
+          value={farmAddress}
+          onChangeText={setFarmAddress}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Types of Crops"
+          value={typesOfCrops}
+          onChangeText={setTypesOfCrops}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Farm Size (acres)"
+          value={farmSize}
+          onChangeText={setFarmSize}
+          keyboardType="numeric"
+        />
+        <Button title="Add Farm" onPress={handleAddFarm} />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Products</Text>
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
+            <View style={styles.productCard}>
+              <Text style={styles.cardText}>Name: {item.name}</Text>
+              <Text style={styles.cardText}>Category: {item.category}</Text>
+              <Text style={styles.cardText}>Price: ${item.price}</Text>
+              <Text style={styles.cardText}>Quantity: {item.quantity}</Text>
+              <Button title="Edit" onPress={() => startEditingProduct(item)} />
+              <Button title="Delete" color="red" onPress={() => handleDeleteProduct(item.id)} />
+            </View>
+          )}
+        />
+
+
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+          onRequestClose={() => setIsModalVisible(false)}
+        >
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Edit Product</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Product Name"
+                value={productName}
+                onChangeText={setProductName}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Category"
+                value={productCategory}
+                onChangeText={setProductCategory}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Price"
+                value={productPrice}
+                onChangeText={setProductPrice}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Quantity"
+                value={productQuantity}
+                onChangeText={setProductQuantity}
+                keyboardType="numeric"
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Description"
+                value={productDescription}
+                onChangeText={setProductDescription}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Images (URLs)"
+                value={productImages}
+                onChangeText={setProductImages}
+              />
+              <View style={styles.modalActions}>
+                <Button title="Save Changes" onPress={handleEditProduct} />
+                <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+                  <Text style={styles.cancelButton}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
-        </View>
-      )}
-
-      {roleDetails && user.role === "buyer" && (
-        <View style={styles.roleDetailsContainer}>
-          <Text style={styles.title}>Buyer Details</Text>
-          <Text style={styles.info}>
-            Delivery Address: {roleDetails.deliveryAddress}
-          </Text>
-          <Text style={styles.info}>
-            Payment Method: {roleDetails.paymentMethod}
-          </Text>
-        </View>
-      )}
+        </Modal>
+      </View>
     </ScrollView>
   );
 };
@@ -196,51 +328,73 @@ const Profile = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#f9f9f9" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  errorContainer: { flex: 1, justifyContent: "center", alignItems: "center", padding: 20 },
-  profileContainer: {
-    marginBottom: 20,
-    padding: 15,
+  profileContainer: { marginBottom: 20 },
+  title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
+  section: { marginBottom: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10 },
+  subTitle: { fontSize: 18, fontWeight: "bold", marginVertical: 10 },
+  farmCard: {
     backgroundColor: "#fff",
-    borderRadius: 10,
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
     elevation: 3,
   },
-  roleDetailsContainer: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+  productCard: {
+    backgroundColor: "#fefefe",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
-  addFarmContainer: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
+  cardText: { fontSize: 14, marginBottom: 5 },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     padding: 10,
     marginVertical: 10,
-    borderRadius: 5,
+    borderRadius: 8,
+    backgroundColor: "#fff",
   },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
-  sectionTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
-  info: { fontSize: 16, marginBottom: 5 },
-  errorText: { fontSize: 18, color: "red", textAlign: "center", marginBottom: 10 },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContent: {
+    width: "90%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  cancelButton: {
+    color: "#007bff",
+    fontSize: 16,
+    marginTop: 10,
+    textAlign: "center",
+  },
 });
 
 export default Profile;
