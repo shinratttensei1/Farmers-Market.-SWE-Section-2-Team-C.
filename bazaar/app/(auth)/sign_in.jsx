@@ -15,6 +15,10 @@ const SignIn = () => {
     password: "",
   });
 
+  // useEffect(() => {
+  //   AsyncStorage.clear();
+  // }, []);
+
   const submit = async () => {
     if (form.login === "" || form.password === "") {
       alert("Please fill in all fields.");
@@ -35,7 +39,6 @@ const SignIn = () => {
         await AsyncStorage.setItem("userRole", response.data.user.role);
         Alert.alert("Success", response.data.msg);
       }
-      Alert.alert('Success', response.data.msg);
       router.replace('/profile');
     } catch (error) {
       console.error('Login error:', error.response?.data || error.message);

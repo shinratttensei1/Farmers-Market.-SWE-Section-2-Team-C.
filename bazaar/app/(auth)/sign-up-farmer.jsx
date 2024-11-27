@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 import { images } from "../../constants";
 import { CustomButton, FormField } from "../../components";
 import api from './api';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SignUpF = () => {
   const [isSubmitting, setSubmitting] = useState(false);
@@ -19,6 +20,10 @@ const SignUpF = () => {
     profilePicture: "freakbob.jpg",
     resources: "Tractors, Seeds",
   });
+
+  // useEffect(() => {
+  //   AsyncStorage.clear();
+  // }, []);
 
   const submit = async () => {
     // console.log(api);
@@ -49,11 +54,15 @@ const SignUpF = () => {
     };
 
     try {
-      // console.log(api); 
-      // console.log(api.post);
-      // const response = await axios.post('http://localhost:5000/register/farmer', formattedForm);
       const response = await api.post('/farmer/register', formattedForm);
-      Alert.alert('Success', response.data.msg);
+      if (response.data.user) {
+        console.log(response.data)
+        await AsyncStorage.setItem("userID", response.data.user.userID.toString());
+        await AsyncStorage.setItem("userRole", response.data.user.role);
+
+        alert("Success!");
+        Alert.alert('Success', response.data.msg);
+      }
       router.replace("/profile");
     } catch (error) {
       Alert.alert('Error', 'Something went wrong!');

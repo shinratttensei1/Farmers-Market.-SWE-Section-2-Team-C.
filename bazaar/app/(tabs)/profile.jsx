@@ -20,6 +20,7 @@ const Profile = () => {
   const [farms, setFarms] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [verified, setIsVerified] = useState(true);
 
 
   const [farmAddress, setFarmAddress] = useState("");
@@ -49,26 +50,36 @@ const Profile = () => {
   setIsModalVisible(true);
 };
   useEffect(() => {
+    // setIsVerified(false);
     fetchUserData();
+    console.log(user);
   }, []);
 
   const fetchUserData = async () => {
     try {
       setLoading(true);
-
       const userID = await AsyncStorage.getItem("userID");
+      console.log(userID);
       if (!userID) {
         Alert.alert("Error", "No user session found. Please log in.");
         setLoading(false);
         return;
       }
-
-      const response = await api.get(`http://127.0.0.1:5000/farmer/profile/${userID}`);
+      const response = await api.get(`/farmer/profile/${userID}`);
       const data = response.data;
-
-      setUser(data);
-      setFarms(data.farms || []);
-      fetchProducts(userID);
+      console.log(data.userID);
+      console.log(data.isVerified);
+      if (data.isVerified == 'false'){
+        setIsVerified(false);
+        setUser(data);
+        setFarms([]);
+      }
+      else {
+        setIsVerified(true);
+        setUser(data);
+        setFarms(data.farms || []);
+        fetchProducts(userID);
+      }
     } catch (error) {
       console.error("Error fetching farmer data:", error);
       Alert.alert("Error", "Failed to load farmer data.");
@@ -112,50 +123,16 @@ const Profile = () => {
   }
 };
 
-  // const handleAddProduct = async () => {
-  //   if (
-  //     !selectedFarm ||
-  //     !productName ||
-  //     !productCategory ||
-  //     !productPrice ||
-  //     !productQuantity ||
-  //     !productDescription
-  //   ) {
-  //     Alert.alert("Error", "Please fill in all fields.");
-  //     return;
-  //   }
-
-  //   try {
-  //     if (!user || !user.id) {
-  //       Alert.alert("Error", "User is not authenticated.");
-  //       return;
-  //     }
-
-  //     const farmerID = user.id;
-  //     const response = await api.post("http://127.0.0.1:5000/farmer/add-product", {
-  //       farmerID,
-  //       farmID: selectedFarm,
-  //       name: productName,
-  //       category: productCategory,
-  //       price: parseFloat(productPrice),
-  //       quantity: parseInt(productQuantity, 10),
-  //       description: productDescription,
-  //       images: productImages,
-  //     });
-
-  //     Alert.alert("Success", response.data.msg);
-  //     setProductName("");
-  //     setProductCategory("");
-  //     setProductPrice("");
-  //     setProductQuantity("");
-  //     setProductDescription("");
-  //     setProductImages("");
-  //     fetchProducts(farmerID);
-  //   } catch (error) {
-  //     console.error("Error adding product:", error);
-  //     Alert.alert("Error", "Failed to add product.");
-  //   }
-  // };
+  const handleDeleteProduct = async (productID) => {
+    try {
+      await api.delete(`http://127.0.0.1:5000/farmer/delete-product/${productID}`);
+      Alert.alert("Success", "Product deleted successfully.");
+      fetchProducts(user.id);
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      Alert.alert("Error", "Failed to delete product.");
+    }
+  };
 
   const handleEditProduct = async () => {
     if (!editingProduct) return;
@@ -180,17 +157,6 @@ const Profile = () => {
     }
   };
 
-  const handleDeleteProduct = async (productID) => {
-    try {
-      await api.delete(`http://127.0.0.1:5000/farmer/delete-product/${productID}`);
-      Alert.alert("Success", "Product deleted successfully.");
-      fetchProducts(user.id);
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      Alert.alert("Error", "Failed to delete product.");
-    }
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -200,14 +166,15 @@ const Profile = () => {
     );
   }
 
-  return (
-    <ScrollView style={styles.container}>
-      <View style={styles.profileContainer}>
-        <Text style={styles.title}>Farmer Profile</Text>
-        <Text style={styles.info}>Name: {user.name}</Text>
-        <Text style={styles.info}>Email: {user.email}</Text>
-        <Text style={styles.info}>Phone: {user.phonenumber}</Text>
-      </View>
+  if (verified){
+    return (
+      <ScrollView style={styles.container}>
+        <View style={styles.profileContainer}>
+          <Text style={styles.title}>Farmer Profile</Text>
+          <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
+          <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
+          <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
+        </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Farms</Text>
@@ -221,7 +188,7 @@ const Profile = () => {
               <Text style={styles.cardText}>Size: {item.farmSize} acres</Text>
             </View>
           )}
-        />
+      />
 
         <Text style={styles.subTitle}>Add a Farm</Text>
         <TextInput
@@ -322,8 +289,33 @@ const Profile = () => {
         </Modal>
       </View>
     </ScrollView>
+    );
+  }
+
+  if (!verified){
+    return (
+      <ScrollView style={styles.container}>
+      <View style={styles.profileContainer}>
+        <Text style={styles.title}>Farmer Profile</Text>
+        <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
+        <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
+        <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
+      </View>
+    </ScrollView>
+    )
+  }
+  
+  return (
+    <ScrollView style={styles.container}>
+      <View style={styles.profileContainer}>
+        <Text style={styles.title}>Farmer Profile</Text>
+        <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
+        <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
+        <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
+      </View>
+    </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#f9f9f9" },

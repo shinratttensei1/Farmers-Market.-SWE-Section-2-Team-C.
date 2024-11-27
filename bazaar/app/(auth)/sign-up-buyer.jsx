@@ -20,6 +20,10 @@ const SignUpB = () => {
     // Add droplist for payment method
   });
 
+  useEffect(() => {
+    AsyncStorage.clear();
+  }, []);
+
   const submit = async () => {
     // console.log(api);
     if (
@@ -38,6 +42,10 @@ const SignUpB = () => {
     setSubmitting(true);
     try {
       const response = await api.post('/buyer/register', form);
+      await AsyncStorage.setItem("userID", response.data.user.userID.toString());
+      await AsyncStorage.setItem("userRole", response.data.user.role);
+      console.log(response.data.user.userID.toString());
+      console.log(response.data.user.role);
       Alert.alert('Success', response.data.msg);
       router.replace("/profile");
     } catch (error) {

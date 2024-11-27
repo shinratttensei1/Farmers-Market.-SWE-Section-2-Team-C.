@@ -180,6 +180,7 @@ def get_farmer_profile(farmer_id):
         return jsonify({
             "name": user.name,
             "email": user.email,
+            "isVerified": user.isVerified,
             "phonenumber": user.phonenumber,
             "govermentIssuedID": farmer.govermentIssuedID,
             "profilePicture": farmer.profilePicture,
