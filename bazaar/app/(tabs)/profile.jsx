@@ -71,10 +71,8 @@ const Profile = () => {
       setLogged(true);
       if (userRole == "farmer"){
         setRole("farmer");
-        console.log(role);
         const response = await api.get(`/farmer/profile/${userID}`);
         const data = response.data;
-        console.log(data);
         if (data.isVerified == 'false'){
           setIsVerified(false);
           setUser(data);
@@ -90,15 +88,6 @@ const Profile = () => {
         const response = await api.get(`/buyer/profile/${userID}`);
         const data = response.data;
         setUser(data);
-        console.log(data.userID);
-
-      //   return jsonify({
-      //     "name": user.name,
-      //     "email": user.email,
-      //     "phonenumber": user.phonenumber,
-      //     "deliveryAddress": buyer.deliveryAddress,
-      //     "paymentMethod": buyer.paymentMethod,
-      // }), 200
       }
       else {
         setRole("guest");
