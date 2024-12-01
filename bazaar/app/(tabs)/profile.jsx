@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link, router } from "expo-router";
 import {
   View,
   Text,
@@ -13,7 +14,9 @@ import {
   TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { CustomButton, FormField } from "../../components";
 import api from "../(auth)/api";
+import { setStatusBarNetworkActivityIndicatorVisible } from "expo-status-bar";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -22,13 +25,13 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [verified, setIsVerified] = useState(true);
 
-
   const [farmAddress, setFarmAddress] = useState("");
   const [typesOfCrops, setTypesOfCrops] = useState("");
   const [farmSize, setFarmSize] = useState("");
+  
+  const [role, setRole] = useState(null);
 
-
-  const [selectedFarm, setSelectedFarm] = useState(null);
+  const [logged, setLogged] = useState(true);
   const [productName, setProductName] = useState("");
   const [productCategory, setProductCategory] = useState("");
   const [productPrice, setProductPrice] = useState("");
@@ -50,36 +53,46 @@ const Profile = () => {
   setIsModalVisible(true);
 };
   useEffect(() => {
-    // setIsVerified(false);
     fetchUserData();
-    console.log(user);
   }, []);
 
   const fetchUserData = async () => {
     try {
       setLoading(true);
       const userID = await AsyncStorage.getItem("userID");
+      const userRole = await AsyncStorage.getItem("userRole");
       console.log(userID);
+      console.log(userRole);
       if (!userID) {
         Alert.alert("Error", "No user session found. Please log in.");
         setLoading(false);
         return;
       }
-      const response = await api.get(`/farmer/profile/${userID}`);
-      const data = response.data;
-      console.log(data.userID);
-      console.log(data.isVerified);
-      if (data.isVerified == 'false'){
-        setIsVerified(false);
+      setLogged(true);
+      if (userRole == "farmer"){
+        setRole("farmer");
+        const response = await api.get(`/farmer/profile/${userID}`);
+        const data = response.data;
+        if (data.isVerified == 'false'){
+          setIsVerified(false);
+          setUser(data);
+          setFarms([]);
+        }
+        else {
+          setIsVerified(true);
+          setUser(data);
+        }
+      }
+      else if (userRole == "buyer"){
+        setRole("buyer");
+        const response = await api.get(`/buyer/profile/${userID}`);
+        const data = response.data;
         setUser(data);
-        setFarms([]);
       }
       else {
-        setIsVerified(true);
-        setUser(data);
-        setFarms(data.farms || []);
-        fetchProducts(userID);
+        setRole("guest");
       }
+
     } catch (error) {
       console.error("Error fetching farmer data:", error);
       Alert.alert("Error", "Failed to load farmer data.");
@@ -97,6 +110,15 @@ const Profile = () => {
       Alert.alert("Error", "Failed to load products.");
     }
   };
+
+  const loginRedirect = async () => {
+    router.replace('../(auth)/sign_in');
+  }
+
+  const logout = async () => {
+    AsyncStorage.clear();
+    router.replace('');
+  }
 
  const handleAddFarm = async () => {
   if (!farmAddress || !typesOfCrops || !farmSize) {
@@ -165,155 +187,185 @@ const Profile = () => {
       </View>
     );
   }
-
-  if (verified){
-    return (
-      <ScrollView style={styles.container}>
+  if (logged){
+    if (role == "farmer"){
+      if (verified){
+        return (
+          <ScrollView style={styles.container}>
+            <View style={styles.profileContainer}>
+              <Text style={styles.title}>Farmer Profile</Text>
+              <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
+              <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
+              <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
+              <CustomButton 
+                title="Log Out"
+                handlePress={logout}
+                containerStyles="mt-7"
+              />
+            </View>
+    
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Farms</Text>
+            <FlatList
+              data={farms}
+              keyExtractor={(item) => item.farmID.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.farmCard}>
+                  <Text style={styles.cardText}>Address: {item.farmAddress}</Text>
+                  <Text style={styles.cardText}>Crops: {item.typesOfCrops}</Text>
+                  <Text style={styles.cardText}>Size: {item.farmSize} acres</Text>
+                </View>
+              )}
+          />
+    
+            <Text style={styles.subTitle}>Add a Farm</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Farm Address"
+              value={farmAddress}
+              onChangeText={setFarmAddress}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Types of Crops"
+              value={typesOfCrops}
+              onChangeText={setTypesOfCrops}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Farm Size (acres)"
+              value={farmSize}
+              onChangeText={setFarmSize}
+              keyboardType="numeric"
+            />
+            <Button title="Add Farm" onPress={handleAddFarm} />
+          </View>
+    
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Products</Text>
+            <FlatList
+              data={products}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <View style={styles.productCard}>
+                  <Text style={styles.cardText}>Name: {item.name}</Text>
+                  <Text style={styles.cardText}>Category: {item.category}</Text>
+                  <Text style={styles.cardText}>Price: ${item.price}</Text>
+                  <Text style={styles.cardText}>Quantity: {item.quantity}</Text>
+                  <Button title="Edit" onPress={() => startEditingProduct(item)} />
+                  <Button title="Delete" color="red" onPress={() => handleDeleteProduct(item.id)} />
+                </View>
+              )}
+            />
+    
+    
+            <Modal
+              visible={isModalVisible}
+              animationType="slide"
+              transparent={true}
+              onRequestClose={() => setIsModalVisible(false)}
+            >
+              <View style={styles.modalContainer}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>Edit Product</Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Product Name"
+                    value={productName}
+                    onChangeText={setProductName}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Category"
+                    value={productCategory}
+                    onChangeText={setProductCategory}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Price"
+                    value={productPrice}
+                    onChangeText={setProductPrice}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Quantity"
+                    value={productQuantity}
+                    onChangeText={setProductQuantity}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Description"
+                    value={productDescription}
+                    onChangeText={setProductDescription}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Images (URLs)"
+                    value={productImages}
+                    onChangeText={setProductImages}
+                  />
+                  <View style={styles.modalActions}>
+                    <Button title="Save Changes" onPress={handleEditProduct} />
+                    <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+                      <Text style={styles.cancelButton}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+          </View>
+        </ScrollView>
+        );
+      }
+    
+      if (!verified){
+        return (
+          <ScrollView style={styles.container}>
+          <View style={styles.profileContainer}>
+            <Text style={styles.title}>Farmer Profile</Text>
+            <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
+            <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
+            <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
+          </View>
+        </ScrollView>
+        )
+      }
+    }
+    else if (role == "buyer"){
+      return (
+        <ScrollView style={styles.container}>
         <View style={styles.profileContainer}>
-          <Text style={styles.title}>Farmer Profile</Text>
+          <Text style={styles.title}>Buyer Profile</Text>
           <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
           <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
           <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
+          <Text style={styles.info}>Delivery Address: {user?.deliveryAddress || "Loading..."}</Text>
+          <Text style={styles.info}>Payment Method: {user?.paymentMethod || "Loading..."}</Text>
+          <CustomButton 
+              title="Log Out"
+              handlePress={logout}
+              containerStyles="mt-7"
+            />
         </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Farms</Text>
-        <FlatList
-          data={farms}
-          keyExtractor={(item) => item.farmID.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.farmCard}>
-              <Text style={styles.cardText}>Address: {item.farmAddress}</Text>
-              <Text style={styles.cardText}>Crops: {item.typesOfCrops}</Text>
-              <Text style={styles.cardText}>Size: {item.farmSize} acres</Text>
-            </View>
-          )}
-      />
-
-        <Text style={styles.subTitle}>Add a Farm</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Farm Address"
-          value={farmAddress}
-          onChangeText={setFarmAddress}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Types of Crops"
-          value={typesOfCrops}
-          onChangeText={setTypesOfCrops}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Farm Size (acres)"
-          value={farmSize}
-          onChangeText={setFarmSize}
-          keyboardType="numeric"
-        />
-        <Button title="Add Farm" onPress={handleAddFarm} />
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Products</Text>
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              <Text style={styles.cardText}>Name: {item.name}</Text>
-              <Text style={styles.cardText}>Category: {item.category}</Text>
-              <Text style={styles.cardText}>Price: ${item.price}</Text>
-              <Text style={styles.cardText}>Quantity: {item.quantity}</Text>
-              <Button title="Edit" onPress={() => startEditingProduct(item)} />
-              <Button title="Delete" color="red" onPress={() => handleDeleteProduct(item.id)} />
-            </View>
-          )}
-        />
-
-
-        <Modal
-          visible={isModalVisible}
-          animationType="slide"
-          transparent={true}
-          onRequestClose={() => setIsModalVisible(false)}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Edit Product</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Product Name"
-                value={productName}
-                onChangeText={setProductName}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Category"
-                value={productCategory}
-                onChangeText={setProductCategory}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Price"
-                value={productPrice}
-                onChangeText={setProductPrice}
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Quantity"
-                value={productQuantity}
-                onChangeText={setProductQuantity}
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Description"
-                value={productDescription}
-                onChangeText={setProductDescription}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Images (URLs)"
-                value={productImages}
-                onChangeText={setProductImages}
-              />
-              <View style={styles.modalActions}>
-                <Button title="Save Changes" onPress={handleEditProduct} />
-                <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-                  <Text style={styles.cancelButton}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      </View>
-    </ScrollView>
-    );
+      </ScrollView>
+      )
+    }
   }
 
-  if (!verified){
-    return (
-      <ScrollView style={styles.container}>
-      <View style={styles.profileContainer}>
-        <Text style={styles.title}>Farmer Profile</Text>
-        <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
-        <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
-        <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
-      </View>
-    </ScrollView>
-    )
-  }
-  
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.profileContainer}>
-        <Text style={styles.title}>Farmer Profile</Text>
-        <Text style={styles.info}>Name: {user?.name || "Loading..."}</Text>
-        <Text style={styles.info}>Email: {user?.email || "Loading..."}</Text>
-        <Text style={styles.info}>Phone: {user?.phonenumber || "Loading..."}</Text>
-      </View>
-    </ScrollView>
+    <View style={styles.profileContainer}>
+      <Text style={styles.title}>Profile</Text>
+      <Text style={styles.info}>Looks like you are not logged in.</Text>
+      <CustomButton
+          title="Proceed to login"
+          handlePress={loginRedirect}
+          containerStyles="mt-7"
+        />
+    </View>
+  </ScrollView>
   );
 }
 
