@@ -5,14 +5,15 @@ import {
   FlatList,
   Image,
   TextInput,
-  Picker,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   Modal,
   Button,
+  StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Picker } from '@react-native-picker/picker'; // Updated Picker import
 
 const Products = () => {
   const [products, setProducts] = useState([]);
@@ -30,6 +31,7 @@ const Products = () => {
     "https://sersidw.pythonanywhere.com/static/uploads/default.jpg";
 
   useEffect(() => {
+    console.log("Fetching products...");
     fetch("http://127.0.0.1:5000/marketplace")
       .then((response) => {
         if (!response.ok) {
@@ -38,14 +40,17 @@ const Products = () => {
         return response.json();
       })
       .then((data) => {
+        console.log("Fetched products data:", data);
         setProducts(data);
         setFilteredProducts(data);
 
         const uniqueFarms = [...new Set(data.map((product) => product.farmAddress))];
         setFarms(uniqueFarms);
+        console.log("Fetched farms:", uniqueFarms);
 
         const uniqueCategories = [...new Set(data.map((product) => product.category))];
         setCategories(uniqueCategories);
+        console.log("Fetched categories:", uniqueCategories);
 
         setLoading(false);
       })
@@ -55,8 +60,8 @@ const Products = () => {
       });
   }, []);
 
-  // Handle search and filters
   useEffect(() => {
+    console.log("Applying filters and search...");
     let updatedProducts = [...products];
 
     if (searchQuery) {
@@ -86,7 +91,42 @@ const Products = () => {
     setFilteredProducts(updatedProducts);
   }, [searchQuery, selectedFarm, selectedCategory, sortOrder]);
 
-  // Render individual product
+  const fetchUserData = async () => {
+    try {
+      const userID = await AsyncStorage.getItem("userID");
+      setUserID(userID);
+    } catch (error) {
+      console.error("Error fetching userID from AsyncStorage:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const [buyerID, setUserID] = useState(null);
+
+  const addToCart = (productID) => {
+    const payload = { buyerID, productID };
+    fetch("http://127.0.0.1:5000/marketplace/cart/add", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to add to cart");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        alert(data.msg);
+      })
+      .catch((error) => {
+        alert("Failed to add to cart.");
+      });
+  };
+
   const renderProduct = ({ item }) => {
     const mainImage =
       item.images && item.images.length > 0 ? item.images[0] : DEFAULT_IMAGE;
@@ -94,7 +134,7 @@ const Products = () => {
     return (
       <TouchableOpacity
         style={styles.productCard}
-        onPress={() => setSelectedProduct(item)} // Set selected product for modal
+        onPress={() => setSelectedProduct(item)}
       >
         <Image source={{ uri: mainImage }} style={styles.productImage} />
         <View style={styles.productDetails}>
@@ -162,13 +202,12 @@ const Products = () => {
       ) : (
         <FlatList
           data={filteredProducts}
-          keyExtractor={(item, index) => index.toString()}
+          keyExtractor={(item) => item.productID.toString()} // Using unique productID
           renderItem={renderProduct}
           contentContainerStyle={styles.listContent}
         />
       )}
 
-      {/* Modal for Product Details */}
       {selectedProduct && (
         <Modal
           visible={!!selectedProduct}
@@ -180,10 +219,9 @@ const Products = () => {
             <View style={styles.modalContent}>
               <Image
                 source={{
-                  uri:
-                    selectedProduct.images && selectedProduct.images.length > 0
-                      ? selectedProduct.images[0]
-                      : DEFAULT_IMAGE,
+                  uri: selectedProduct.images && selectedProduct.images.length > 0
+                    ? selectedProduct.images[0]
+                    : DEFAULT_IMAGE,
                 }}
                 style={styles.modalImage}
               />
@@ -198,6 +236,10 @@ const Products = () => {
                 Price: ${parseFloat(selectedProduct.price).toFixed(2)}
               </Text>
               <Button title="Close" onPress={() => setSelectedProduct(null)} />
+              <Button
+                title="Add to Cart"
+                onPress={() => addToCart(selectedProduct.productID)}
+              />
             </View>
           </View>
         </Modal>
@@ -209,86 +251,84 @@ const Products = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f4f4f4",
-    padding: 10,
+    backgroundColor: "#f5f5f5",
+    padding: 16,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10,
     textAlign: "center",
+    marginBottom: 16,
   },
   searchInput: {
-    borderWidth: 1,
+    height: 40,
     borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 8,
-    marginBottom: 10,
+    borderWidth: 1,
+    borderRadius: 4,
+    marginBottom: 16,
+    paddingLeft: 8,
   },
   picker: {
-    borderWidth: 1,
+    height: 40,
     borderColor: "#ccc",
-    borderRadius: 8,
-    marginBottom: 10,
-    padding: 8,
-    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderRadius: 4,
+    marginBottom: 16,
   },
   sortButtons: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10,
+    justifyContent: "space-between",
+    marginBottom: 16,
   },
   sortButton: {
-    padding: 10,
     backgroundColor: "#007bff",
-    borderRadius: 5,
+    padding: 10,
+    borderRadius: 4,
+    width: "45%",
   },
   sortButtonText: {
     color: "#fff",
+    textAlign: "center",
   },
   productCard: {
     backgroundColor: "#fff",
-    marginBottom: 15,
     borderRadius: 8,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    marginBottom: 16,
+    flexDirection: "row",
+    padding: 16,
   },
   productImage: {
-    width: "100%",
-    height: 150,
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginRight: 16,
   },
   productDetails: {
-    padding: 10,
+    flex: 1,
+    justifyContent: "space-between",
   },
   productName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 5,
   },
   productCategory: {
-    fontSize: 14,
-    color: "#888",
-    marginBottom: 5,
+    color: "#555",
   },
   productFarm: {
-    fontSize: 14,
     color: "#555",
-    marginBottom: 5,
   },
   productPrice: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#28a745",
+    color: "#007bff",
   },
   emptyMessage: {
     textAlign: "center",
-    marginTop: 20,
     fontSize: 18,
-    color: "#555",
+    marginTop: 20,
+  },
+  listContent: {
+    paddingBottom: 100,
   },
   modalContainer: {
     flex: 1,
@@ -297,38 +337,36 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContent: {
-    width: "90%",
+    width: 300,
     backgroundColor: "#fff",
-    borderRadius: 10,
     padding: 20,
+    borderRadius: 8,
     alignItems: "center",
   },
   modalImage: {
-    width: "100%",
-    height: 200,
-    marginBottom: 10,
+    width: 150,
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 5,
+    marginBottom: 8,
   },
   modalCategory: {
     fontSize: 16,
-    color: "#888",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   modalDescription: {
     fontSize: 14,
-    color: "#555",
-    marginBottom: 10,
-    textAlign: "center",
+    marginBottom: 8,
   },
   modalPrice: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "#28a745",
-    marginBottom: 10,
+    color: "#007bff",
+    marginBottom: 8,
   },
 });
 
