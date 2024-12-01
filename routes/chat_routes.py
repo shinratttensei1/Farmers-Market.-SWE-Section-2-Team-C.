@@ -126,3 +126,24 @@ def fetch_messages(chatID):
     except Exception as e:
         print(f"Error fetching messages: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
+
+@chat_blueprint.route('/active/<int:userID>', methods=['GET'])
+def get_active_chats(userID):
+    try:
+        # Fetch all chats where the user is a participant
+        chats = Chat.query.filter(
+            (Chat.farmerID == userID) | (Chat.buyerID == userID)
+        ).all()
+
+        # Format the response
+        chat_list = [{
+            "chatID": chat.chatID,
+            "otherUserID": chat.buyerID if chat.farmerID == userID else chat.farmerID,
+            "lastUpdated": chat.last_updated
+        } for chat in chats]
+
+        return jsonify({"chats": chat_list}), 200
+
+    except Exception as e:
+        print(f"Error fetching active chats: {e}", flush=True)
+        return jsonify({"error": "Internal Server Error"}), 500
