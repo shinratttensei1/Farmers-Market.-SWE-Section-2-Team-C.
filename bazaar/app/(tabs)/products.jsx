@@ -10,10 +10,10 @@ import {
   Modal,
   Button,
   StyleSheet,
+  Picker,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Picker } from '@react-native-picker/picker'; // Updated Picker import
 
 const Products = () => {
   const [products, setProducts] = useState([]);
