@@ -59,7 +59,6 @@ const SignUpF = () => {
         console.log(response.data)
         await AsyncStorage.setItem("userID", response.data.user.userID.toString());
         await AsyncStorage.setItem("userRole", response.data.user.role);
-
         alert("Success!");
         Alert.alert('Success', response.data.msg);
       }

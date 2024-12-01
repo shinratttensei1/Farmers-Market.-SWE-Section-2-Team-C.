@@ -20,9 +20,9 @@ const SignUpB = () => {
     // Add droplist for payment method
   });
 
-  useEffect(() => {
-    AsyncStorage.clear();
-  }, []);
+  // useEffect(() => {
+  //   AsyncStorage.clear();
+  // }, []);
 
   const submit = async () => {
     // console.log(api);
