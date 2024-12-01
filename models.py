@@ -57,13 +57,17 @@ class Product(db.Model):
     images = db.Column(db.JSON, nullable=True)
     farmID = db.Column(db.Integer, db.ForeignKey('farms.farmID'), nullable=False)
 
-class Cart(db.Model):
-    __tablename__ = 'cart'
-    cartID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    buyerID = db.Column(db.Integer, db.ForeignKey('buyer.buyerID'), nullable=False)
-    products = db.relationship('CartProduct', backref='cart', lazy=True)
+class Chat(db.Model):
+    chatID = db.Column(db.Integer, primary_key=True)
+    farmerID = db.Column(db.Integer, nullable=False)
+    buyerID = db.Column(db.Integer, nullable=False)
+    start_time = db.Column(db.Integer, nullable=False)
+    last_updated = db.Column(db.Integer, nullable=False)
 
-class CartProduct(db.Model):
-    __tablename__ = 'cart_products'
-    cartID = db.Column(db.Integer, db.ForeignKey('cart.cartID'), nullable=False, primary_key=True)
-    productID = db.Column(db.Integer, db.ForeignKey('product.productID'), nullable=False, primary_key=True)
+
+class Message(db.Model):
+    messageID = db.Column(db.Integer, primary_key=True)
+    chatID = db.Column(db.Integer, db.ForeignKey('chat.chatID'), nullable=False)
+    sender = db.Column(db.String(8), nullable=False)  # "farmer" or "buyer"
+    messageText = db.Column(db.Text, nullable=False)
+    messageDateTime = db.Column(db.DateTime, nullable=False)

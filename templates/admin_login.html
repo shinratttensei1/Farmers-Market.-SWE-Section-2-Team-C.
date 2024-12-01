@@ -87,6 +87,7 @@
         {% endwith %}
 
         <!-- Login Form -->
+        {% if not otp_form %}
         <form method="POST" action="/admin/login">
             <label for="email">Email</label>
             <input type="email" id="email" name="email" placeholder="Enter your email" required>
@@ -94,6 +95,14 @@
             <input type="password" id="password" name="password" placeholder="Enter your password" required>
             <button type="submit">Login</button>
         </form>
+        {% else %}
+        <!-- OTP Form -->
+        <form method="POST" action="{{ url_for('admin.verify_otp') }}">
+            <label for="otp">Enter OTP</label>
+            <input type="text" id="otp" name="otp" placeholder="Enter OTP from your authenticator app" required>
+            <button type="submit">Verify OTP</button>
+        </form>
+        {% endif %}
 
         <!-- Register Redirect Button -->
         <div class="form-footer">

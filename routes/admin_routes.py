@@ -259,30 +259,49 @@ def edit_user(user_id):
 
 
 from flask import session, flash  # Ensure these imports are present
-
+import pyotp
+two_factor_secrets = {}
 @admin_blueprint.route('/login', methods=['GET', 'POST'])
 def admin_login():
-    """
-    Admin Login: Allows an admin to log in to the dashboard.
-    """
     if request.method == 'POST':
-        # Get email and password from form
-        email = request.form.get('email')
-        password = request.form.get('password')
-
-        # Query for admin user
+        email = request.form['email']
+        password = request.form['password']
         admin_user = User.query.filter_by(email=email, role='Admin').first()
+        # Check if email and password match (using direct comparison)
+        if admin_user and admin_user.password == password:
+            # Generate a 2FA secret and store it in session
+            totp = pyotp.TOTP(pyotp.random_base32())
+            session['two_factor_secret'] = totp.secret  # Store the secret in session
+            print(session['two_factor_secret'])
+            # Send OTP to user (you would usually send this via email or SMS)
+            otp = totp.now()
+            print(f"OTP for {email}: {otp}")  # In real-world use, you would send this to the user
 
-        if admin_user and admin_user.password == password:  # Direct password match
-            session['admin_user_id'] = admin_user.userID
-            session['admin_user_role'] = admin_user.role
-            flash('Login successful!', 'success')
-            return redirect(url_for('admin.admin_dashboard'))  # Redirect to dashboard
+            # Render the OTP form
+            return render_template('admin_login.html', otp_form=True)
         else:
-            flash('Invalid email or password. Please try again.', 'danger')
+            flash('Invalid email or password', 'danger')
 
-    # Render login page for GET requests
-    return render_template('admin_login.html')
+    return render_template('admin_login.html',otp_form=False)
+
+
+@admin_blueprint.route('/admin/verify_otp', methods=['POST'])
+def verify_otp():
+    if 'two_factor_secret' not in session:
+        return redirect(url_for('admin_login'))
+    print('just checking otp')
+    otp = request.form['otp']
+    totp = pyotp.TOTP(session['two_factor_secret'])
+
+    # Validate OTP
+    if totp.verify(otp):
+        print('Login successful!')
+        flash('Login successful!', 'success')
+        return redirect(url_for('admin.admin_dashboard'))  # Redirect to a dashboard or admin page
+    else:
+        flash('Invalid OTP. Please try again.', 'danger')
+        return redirect(url_for('admin.admin_login'))
+
 
 @admin_blueprint.route('/logout', methods=['GET'])
 def admin_logout():
