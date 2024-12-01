@@ -56,3 +56,18 @@ class Product(db.Model):
     description = db.Column(db.Text, nullable=True)
     images = db.Column(db.JSON, nullable=True)
     farmID = db.Column(db.Integer, db.ForeignKey('farms.farmID'), nullable=False)
+
+class Chat(db.Model):
+    chatID = db.Column(db.Integer, primary_key=True)
+    farmerID = db.Column(db.Integer, nullable=False)
+    buyerID = db.Column(db.Integer, nullable=False)
+    start_time = db.Column(db.Integer, nullable=False)
+    last_updated = db.Column(db.Integer, nullable=False)
+
+
+class Message(db.Model):
+    messageID = db.Column(db.Integer, primary_key=True)
+    chatID = db.Column(db.Integer, db.ForeignKey('chat.chatID'), nullable=False)
+    sender = db.Column(db.String(8), nullable=False)  # "farmer" or "buyer"
+    messageText = db.Column(db.Text, nullable=False)
+    messageDateTime = db.Column(db.DateTime, nullable=False)

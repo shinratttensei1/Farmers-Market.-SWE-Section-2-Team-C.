@@ -1,27 +1,31 @@
-import { View, Text, Image, ImageSourcePropType } from 'react-native'
-import { Tabs, Redirect } from 'expo-router'
-import "../global.css"
+import { View, Text, Image } from 'react-native';
+import { Tabs } from 'expo-router';
+import "../global.css";
 
-import { icons } from '../../constants'
+import { icons } from '../../constants';
 
 const TabIcon = ({ icon, color, name, focused }) => {
-    return (
-        <View className='items-center justify-center gap-2 text-center'>
-          <Image
-          source={icon}
-          tintColor={color}
-          style={{
-            resizeMode: 'center',
-            width: 30,
-            height: 30,
-          }}
-          />
-            <Text className={`${focused ? 'font-psemibold' : 'font-pregular'} text-xs text-zinc`}>
-              {name}
-            </Text>
-        </View>
-    )
-}
+  return (
+    <View className="items-center justify-center gap-2 text-center">
+      <Image
+        source={icon}
+        style={{
+          tintColor: color, // Ensure tintColor works
+          resizeMode: 'contain',
+          width: 30,
+          height: 30,
+        }}
+      />
+      <Text
+        className={`${
+          focused ? 'font-psemibold' : 'font-pregular'
+        } text-xs text-zinc`}
+      >
+        {name}
+      </Text>
+    </View>
+  );
+};
 
 const TabsLayout = () => {
   return (
@@ -36,8 +40,8 @@ const TabsLayout = () => {
             borderTopWidth: 1,
             borderTopColor: "#232533",
             height: 84,
-        },
-      }}
+          },
+        }}
       >
         <Tabs.Screen
           name="products"
@@ -46,12 +50,12 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                  icon={icons.crops}
-                  color={color}
-                  name="Products"
-                  focused={focused}
+                icon={icons.crops}
+                color={color}
+                name="Products"
+                focused={focused}
               />
-            )
+            ),
           }}
         />
         <Tabs.Screen
@@ -61,48 +65,62 @@ const TabsLayout = () => {
             headerShown: false,
             tabBarIcon: ({ color, focused }) => (
               <TabIcon
-                  icon={icons.plus}
-                  color={color}
-                  name="Add Products"
-                  focused={focused}
+                icon={icons.plus}
+                color={color}
+                name="Add Products"
+                focused={focused}
               />
-            )
+            ),
           }}
         />
         <Tabs.Screen
-        name="cart"
-        options={{
-          title: 'Cart',
-          headerShown: false,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon
+          name="cart"
+          options={{
+            title: 'Cart',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
                 icon={icons.cart}
                 color={color}
                 name="Cart"
                 focused={focused}
-            />
-          )
-        }}
+              />
+            ),
+          }}
         />
         <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          headerShown: false,
-          tabBarIcon: ({ color, focused }) => (
-            <TabIcon
+          name="profile"
+          options={{
+            title: 'Profile',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
                 icon={icons.profile}
                 color={color}
                 name="Profile"
                 focused={focused}
-          />
-          
-          )
-        }}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="chat"
+          options={{
+            title: 'Chat',
+            headerShown: false,
+            tabBarIcon: ({ color, focused }) => (
+              <TabIcon
+                icon={icons.profile} // Ensure chat icon exists
+                color={color}
+                name="Chat"
+                focused={focused}
+              />
+            ),
+          }}
         />
       </Tabs>
     </>
-  )
-}
+  );
+};
 
-export default TabsLayout
+export default TabsLayout;

@@ -9,6 +9,7 @@ from routes.farmer_routes import farmer_blueprint
 from routes.buyer_routes import buyer_blueprint
 from routes.login_routes import login_blueprint
 from routes.user_routes import user_blueprint
+from routes.chat_routes import chat_blueprint
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -25,6 +26,8 @@ app.register_blueprint(farmer_blueprint, url_prefix='/farmer')
 app.register_blueprint(buyer_blueprint, url_prefix='/buyer')
 app.register_blueprint(marketplace_web, url_prefix='/marketplace')
 app.register_blueprint(user_blueprint, url_prefix='/user')
+
+app.register_blueprint(chat_blueprint, url_prefix='/chat')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
