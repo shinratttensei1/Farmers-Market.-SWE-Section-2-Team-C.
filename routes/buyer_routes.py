@@ -30,7 +30,13 @@ def register_buyer():
     )
     db.session.add(buyer)
     db.session.commit()
-    return jsonify({"msg": "Buyer registered successfully!"}), 201
+    return jsonify({
+        "msg": "Buyer registered successfully!",
+        "user": {
+            "userID": user.userID,
+            "role": user.role
+        }
+    }), 201
 
 from models import Product, Farmer
 

@@ -4,7 +4,6 @@ from models import db, User, Farmer, Farm
 
 farmer_blueprint = Blueprint('farmer', __name__)
 
-
 @farmer_blueprint.route('/register', methods=['POST'])
 def register_farmer():
     data = request.json
@@ -21,7 +20,7 @@ def register_farmer():
     )
     db.session.add(user)
     db.session.flush()
-    
+
     farmer = Farmer(
         farmerID=user.userID,
         govermentIssuedID=data['govermentIssuedID'],
@@ -31,10 +30,16 @@ def register_farmer():
     )
     db.session.add(farmer)
     db.session.commit()
-    return jsonify({"msg": "Farmer registered successfully, pending approval."}), 201
+
+    return jsonify({
+        "msg": "Farmer registered successfully, pending approval.",
+        "user": {
+            "userID": user.userID,
+            "role": user.role
+        }
+    }), 201
 
 from models import db, Product
-
 
 @farmer_blueprint.route('/add-product', methods=['POST'])
 def add_product():
