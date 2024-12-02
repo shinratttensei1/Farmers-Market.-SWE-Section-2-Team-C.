@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { CustomButton, FormField } from "../../components";
 import {
   View,
   Text,
@@ -148,7 +149,7 @@ const Products = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="bg-black-200 h-full">
       <Text style={styles.title}>Marketplace</Text>
 
       <TextInput
@@ -180,8 +181,8 @@ const Products = () => {
         ))}
       </Picker>
 
-      <View style={styles.sortButtons}>
-        <TouchableOpacity
+      <View className="m-2 row-start-auto row-end-auto mb-4 mt-4">
+        {/* <TouchableOpacity
           style={styles.sortButton}
           onPress={() => setSortOrder("asc")}
         >
@@ -192,7 +193,17 @@ const Products = () => {
           onPress={() => setSortOrder("desc")}
         >
           <Text style={styles.sortButtonText}>Price: High to Low</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+        <CustomButton
+            title="Price: Low to High"
+            onPress={() => setSortOrder("asc")}
+            containerStyles="mt-7"
+          />
+        <CustomButton
+          title="Price: High to Low"
+          onPress={() => setSortOrder("desc")}
+          containerStyles="mt-7"
+        />
       </View>
 
       {loading ? (
@@ -235,10 +246,16 @@ const Products = () => {
               <Text style={styles.modalPrice}>
                 Price: ${parseFloat(selectedProduct.price).toFixed(2)}
               </Text>
-              <Button title="Close" onPress={() => setSelectedProduct(null)} />
-              <Button
+              {/* <Button title="Close" onPress={() => setSelectedProduct(null)} /> */}
+              <CustomButton
+                title="Close"
+                handlePress={() => setSelectedProduct(null)}
+                containerStyles="mt-7"
+              />
+              <CustomButton
                 title="Add to Cart"
-                onPress={() => addToCart(selectedProduct.productID)}
+                handlePress={() => addToCart(selectedProduct.productID)}
+                containerStyles="mt-7"
               />
             </View>
           </View>
@@ -291,7 +308,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   productCard: {
-    backgroundColor: "#fff",
+    backgroundColor: "#c6b694",
     borderRadius: 8,
     marginBottom: 16,
     flexDirection: "row",
@@ -320,7 +337,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#3e9c35",
   },
   emptyMessage: {
     textAlign: "center",
@@ -338,7 +355,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: 300,
-    backgroundColor: "#fff",
+    backgroundColor: "#c6b694",
     padding: 20,
     borderRadius: 8,
     alignItems: "center",
@@ -365,7 +382,7 @@ const styles = StyleSheet.create({
   modalPrice: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#3e9c35",
     marginBottom: 8,
   },
 });

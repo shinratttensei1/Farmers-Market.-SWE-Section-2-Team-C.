@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
@@ -181,16 +182,19 @@ const Profile = () => {
 
   if (loading) {
     return (
+      <SafeAreaView className="bg-black-200 h-full">
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#007bff" />
         <Text>Loading profile...</Text>
       </View>
+      </SafeAreaView>
     );
   }
   if (logged){
     if (role == "farmer"){
       if (verified){
         return (
+          <SafeAreaView className="bg-black-200 h-full">
           <ScrollView style={styles.container}>
             <View style={styles.profileContainer}>
               <Text style={styles.title}>Farmer Profile</Text>
@@ -316,6 +320,7 @@ const Profile = () => {
             </Modal>
           </View>
         </ScrollView>
+        </SafeAreaView>
         );
       }
     
@@ -334,6 +339,7 @@ const Profile = () => {
     }
     else if (role == "buyer"){
       return (
+        <SafeAreaView className="bg-black-200 h-full">
         <ScrollView style={styles.container}>
         <View style={styles.profileContainer}>
           <Text style={styles.title}>Buyer Profile</Text>
@@ -349,11 +355,13 @@ const Profile = () => {
             />
         </View>
       </ScrollView>
+      </SafeAreaView>
       )
     }
   }
 
   return (
+    <SafeAreaView className="bg-black-200 h-full">
     <ScrollView style={styles.container}>
     <View style={styles.profileContainer}>
       <Text style={styles.title}>Profile</Text>
@@ -365,11 +373,12 @@ const Profile = () => {
         />
     </View>
   </ScrollView>
+  </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f9f9f9" },
+  container: { flex: 1, padding: 20, backgroundColor: "#97886b" },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   profileContainer: { marginBottom: 20 },
   title: { fontSize: 24, fontWeight: "bold", marginBottom: 10 },
