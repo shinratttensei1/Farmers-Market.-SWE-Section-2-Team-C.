@@ -57,17 +57,33 @@ class Product(db.Model):
     images = db.Column(db.JSON, nullable=True)
     farmID = db.Column(db.Integer, db.ForeignKey('farms.farmID'), nullable=False)
 
+    def __repr__(self):
+        return f"<Product productID={self.productID}, name={self.name}, price={self.price}, quantity={self.quantity}>"
+
 
 class Cart(db.Model):
     __tablename__ = 'cart'
     cartID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     buyerID = db.Column(db.Integer, db.ForeignKey('buyer.buyerID'), nullable=False)
+
+    # Relationship with CartProduct model to link cart with products
     products = db.relationship('CartProduct', backref='cart', lazy=True)
+
+    def __repr__(self):
+        return f"<Cart cartID={self.cartID}, buyerID={self.buyerID}>"
+
 
 class CartProduct(db.Model):
     __tablename__ = 'cart_products'
     cartID = db.Column(db.Integer, db.ForeignKey('cart.cartID'), nullable=False, primary_key=True)
     productID = db.Column(db.Integer, db.ForeignKey('product.productID'), nullable=False, primary_key=True)
+
+    # This relationship is optional depending on your setup
+    product = db.relationship('Product', backref='cart_products', lazy=True)
+
+    def __repr__(self):
+        return f"<CartProduct cartID={self.cartID}, productID={self.productID}>"
+
 
 class Chat(db.Model):
     chatID = db.Column(db.Integer, primary_key=True)
@@ -83,3 +99,19 @@ class Message(db.Model):
     sender = db.Column(db.String(8), nullable=False)  # "farmer" or "buyer"
     messageText = db.Column(db.Text, nullable=False)
     messageDateTime = db.Column(db.DateTime, nullable=False)
+
+
+
+class Order(db.Model):
+    __tablename__ = 'order'
+
+    orderID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    cartID = db.Column(db.Integer, db.ForeignKey('cart.cartID'), nullable=False)
+    totalPrice = db.Column(db.Integer, nullable=False)
+    orderDate = db.Column(db.DateTime, nullable=True)
+    orderStatus = db.Column(db.String(11), nullable=False)
+
+    cart = db.relationship('Cart', backref=db.backref('orders', lazy=True))
+
+    def __repr__(self):
+        return f"<Order orderID={self.orderID}, cartID={self.cartID}, totalPrice={self.totalPrice}, orderStatus={self.orderStatus}>"

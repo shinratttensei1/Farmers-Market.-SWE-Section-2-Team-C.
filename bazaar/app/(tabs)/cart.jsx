@@ -8,7 +8,6 @@ const Cart = () => {
   const [error, setError] = useState(null);
   const [buyerID, setBuyerID] = useState(null);
   const [removingItem, setRemovingItem] = useState(null);
-  const [updatingItem, setUpdatingItem] = useState(null);
   const [localCart, setLocalCart] = useState([]);  // For storing local cart quantities
 
   useEffect(() => {
@@ -30,23 +29,19 @@ const Cart = () => {
     setIsLoading(true);
     setError(null);
 
+    // Fetch cart data from the backend
     const cartUrl = `http://127.0.0.1:5000/marketplace/cart/${buyerID}`;
     fetch(cartUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch cart items");
-        }
-        return response.json();
-      })
+      .then((response) => response.json())
       .then((data) => {
         if (Array.isArray(data)) {
-          // Ensure quantity starts at 1 if undefined or 0
+          // Initialize local cart with the user-selected quantity
           const updatedCart = data.map(item => ({
             ...item,
-            cartQuantity: item.cartQuantity > 0 ? item.cartQuantity : 1,  // Cart quantity is independent of available stock
+            cartQuantity: item.cartQuantity > 0 ? item.cartQuantity : 1,  // Initialize to 1 if undefined
           }));
           setCartItems(updatedCart);
-          setLocalCart(updatedCart);  // Initialize local cart with cart quantity
+          setLocalCart(updatedCart);  // Store the local cart for quantity management
         } else {
           throw new Error("Cart data is not in expected format");
         }
@@ -71,22 +66,28 @@ const Cart = () => {
       body: JSON.stringify({ buyerID, productID }),
     })
       .then((response) => response.json())
-      .then((result) => {
+      .then(() => {
         setCartItems((prevItems) => prevItems.filter((item) => item.productID !== productID));
         setRemovingItem(null);
       })
-      .catch((error) => {
+      .catch(() => {
         setRemovingItem(null);
         setError("Failed to remove item. Please try again.");
       });
   };
 
+  // Update the quantity locally when the user changes the input
   const updateQuantityLocally = (productID, newQuantity) => {
     setLocalCart((prevCart) =>
       prevCart.map((item) =>
         item.productID === productID ? { ...item, cartQuantity: Math.max(1, newQuantity) } : item
       )
     );
+  };
+
+  const calculateTotalCost = () => {
+    // Use the user-selected quantity (cartQuantity) for price calculation
+    return localCart.reduce((total, item) => total + item.price * item.cartQuantity, 0).toFixed(2);
   };
 
   const updateCartOnBackend = () => {
@@ -100,16 +101,41 @@ const Cart = () => {
         body: JSON.stringify({
           buyerID,
           productID: item.productID,
-          quantity: item.cartQuantity,  // Send cart quantity to the backend
+          quantity: item.cartQuantity,  // Send user-selected quantity
         }),
-      }).catch((error) => {
+      }).catch(() => {
         setError("Failed to update quantity. Please try again.");
       });
     });
   };
 
-  const calculateTotalCost = () => {
-    return localCart.reduce((total, item) => total + item.price * item.cartQuantity, 0).toFixed(2);
+  const createOrder = () => {
+    const orderUrl = "http://127.0.0.1:5000/marketplace/order";
+    const totalCost = calculateTotalCost();
+
+    fetch(orderUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        buyerID,
+        totalPrice: totalCost,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.orderID) {
+          alert(`Order created successfully! Order ID: ${data.orderID}`);
+          setCartItems([]);  // Clear cart after successful order
+          setLocalCart([]);
+        } else {
+          setError(data.error || "Error creating order.");
+        }
+      })
+      .catch(() => {
+        setError("Error creating order. Please try again later.");
+      });
   };
 
   const renderCartItem = ({ item }) => {
@@ -132,7 +158,7 @@ const Cart = () => {
           {/* Quantity Controls */}
           <View style={styles.quantityControls}>
             <TouchableOpacity
-              onPress={() => updateQuantityLocally(item.productID, Math.max(1, item.cartQuantity - 1))}
+              onPress={() => updateQuantityLocally(item.productID, item.cartQuantity - 1)}
             >
               <Text style={styles.quantityButton}>-</Text>
             </TouchableOpacity>
@@ -195,6 +221,14 @@ const Cart = () => {
           >
             <Text style={styles.updateButtonText}>Update Cart</Text>
           </TouchableOpacity>
+
+          {/* Order Button */}
+          <TouchableOpacity
+            style={styles.orderButton}
+            onPress={createOrder}
+          >
+            <Text style={styles.orderButtonText}>Place Order</Text>
+          </TouchableOpacity>
         </>
       ) : (
         <Text style={styles.emptyCart}>Your cart is empty.</Text>
@@ -202,8 +236,6 @@ const Cart = () => {
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   container: {
@@ -313,6 +345,18 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   updateButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  orderButton: {
+    backgroundColor: "#4CAF50",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignItems: "center",
+    marginTop: 20,
+  },
+  orderButtonText: {
     color: "#fff",
     fontWeight: "bold",
   },

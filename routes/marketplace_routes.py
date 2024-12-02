@@ -1,8 +1,9 @@
+import datetime
 import os
 import json
 from flask import Blueprint, request, jsonify, render_template
 from werkzeug.utils import secure_filename
-from models import db, Product, User, Farm, Cart, CartProduct
+from models import db, Product, User, Farm, Cart, CartProduct, Order
 
 # Single blueprint for both web and API functionality
 marketplace_web = Blueprint('marketplace_web', __name__)
@@ -199,3 +200,61 @@ def get_cart(buyerID):
     ]
 
     return jsonify(result), 200
+
+
+@marketplace_web.route('/order', methods=['POST'])
+def create_order():
+    # Retrieve the buyerID from the request data
+    data = request.json
+    buyerID = data.get("buyerID")
+
+    if not buyerID:
+        return jsonify({"error": "buyerID is required"}), 400
+
+    # Fetch the cart for the buyer
+    cart = Cart.query.filter_by(buyerID=buyerID).first()
+    if not cart:
+        return jsonify({"error": "Cart not found for this buyer."}), 404
+
+    # Get the products in the cart and calculate total price
+    cart_products = CartProduct.query.filter_by(cartID=cart.cartID).join(Product).all()
+
+    total_price = 0
+    product_details = []  # Optional: to store product details for logging or further use
+
+    for cart_product in cart_products:
+        product = cart_product.product  # Access the associated product using the relationship
+        if not product:
+            continue  # Skip this cart_product if no associated product is found
+
+        product_price = product.price
+        product_quantity = cart_product.product.quantity  # Use quantity from the product table
+
+        # Calculate the total price for each product
+        total_price += product_price * product_quantity
+
+        # Optional: store product details for logging or debugging purposes
+        product_details.append({
+            "productID": product.productID,
+            "name": product.name,
+            "category": product.category,
+            "price": product_price,
+            "available_quantity": product_quantity,  # The available quantity from the product table
+            "total_price_for_product": product_price * product_quantity
+        })
+
+    # Create the order
+    new_order = Order(
+        cartID=cart.cartID,
+        totalPrice=total_price,
+        orderStatus="Pending",  # Initial status
+        orderDate=datetime.datetime  # Set the current date and time
+    )
+    db.session.add(new_order)
+    db.session.commit()
+
+    return jsonify({
+        "orderID": new_order.orderID,
+        "totalPrice": total_price,
+        "product_details": product_details  # Optional: Include product details in the response
+    }), 201
