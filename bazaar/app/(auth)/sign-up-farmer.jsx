@@ -21,10 +21,6 @@ const SignUpF = () => {
     resources: "Tractors, Seeds",
   });
 
-  // useEffect(() => {
-  //   AsyncStorage.clear();
-  // }, []);
-
   const submit = async () => {
     // console.log(api);
     if (
@@ -39,7 +35,6 @@ const SignUpF = () => {
       return;
     }
 
-    // add other checks later like password length etc
     setSubmitting(true);
 
     const formattedForm = {
@@ -55,7 +50,8 @@ const SignUpF = () => {
 
     try {
       const response = await api.post('/farmer/register', formattedForm);
-      if (response.data.user) {
+      console.log(response.data);
+      if (response.data) {
         console.log(response.data)
         await AsyncStorage.setItem("userID", response.data.user.userID.toString());
         await AsyncStorage.setItem("userRole", response.data.user.role);

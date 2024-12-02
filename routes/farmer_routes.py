@@ -21,8 +21,7 @@ def register_farmer():
     )
     db.session.add(user)
     db.session.flush()
-
-
+    
     farmer = Farmer(
         farmerID=user.userID,
         govermentIssuedID=data['govermentIssuedID'],

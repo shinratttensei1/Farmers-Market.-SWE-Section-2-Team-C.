@@ -6,6 +6,7 @@ import { View, Text, ScrollView, Dimensions, Alert, Image } from "react-native";
 import { images } from "../../constants";
 import { CustomButton, FormField } from "../../components";
 import api from './api';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SignUpB = () => {
   const [isSubmitting, setSubmitting] = useState(false);
@@ -20,12 +21,7 @@ const SignUpB = () => {
     // Add droplist for payment method
   });
 
-  // useEffect(() => {
-  //   AsyncStorage.clear();
-  // }, []);
-
   const submit = async () => {
-    // console.log(api);
     if (
       form.login === "" ||
       form.email === "" ||
@@ -38,15 +34,27 @@ const SignUpB = () => {
       alert("Please fill in all fields.");
       return;
     }
-    // add other checks later like password length etc
     setSubmitting(true);
+    const formattedForm = {
+      login: form.login,
+      email: form.email,
+      password: form.password,
+      phonenumber: form.phonenumber,
+      name: form.name,
+      deliveryAddress: form.deliveryAddress,
+      paymentMethod: form.paymentMethod,
+    };
+
     try {
-      const response = await api.post('/buyer/register', form);
-      await AsyncStorage.setItem("userID", response.data.user.userID.toString());
-      await AsyncStorage.setItem("userRole", response.data.user.role);
-      console.log(response.data.user.userID.toString());
-      console.log(response.data.user.role);
-      Alert.alert('Success', response.data.msg);
+      const response = await api.post('/buyer/register', formattedForm);
+      console.log(response.data);
+      if (response.data.user) {
+        console.log(response.data)
+        await AsyncStorage.setItem("userID", response.data.user.userID.toString());
+        await AsyncStorage.setItem("userRole", response.data.user.role);
+        alert("Success!");
+        Alert.alert('Success', response.data.msg);
+      }
       router.replace("/profile");
     } catch (error) {
       Alert.alert('Error', 'Something went wrong!');

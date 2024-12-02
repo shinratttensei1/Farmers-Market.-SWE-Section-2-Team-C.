@@ -16,7 +16,6 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CustomButton, FormField } from "../../components";
 import api from "../(auth)/api";
-import { setStatusBarNetworkActivityIndicatorVisible } from "expo-status-bar";
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -81,6 +80,7 @@ const Profile = () => {
         else {
           setIsVerified(true);
           setUser(data);
+          fetchProducts(data.userID || userID);
         }
       }
       else if (userRole == "buyer"){
@@ -203,7 +203,6 @@ const Profile = () => {
                 containerStyles="mt-7"
               />
             </View>
-    
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Farms</Text>
             <FlatList

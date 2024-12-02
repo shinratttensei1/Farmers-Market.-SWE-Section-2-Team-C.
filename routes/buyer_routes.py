@@ -32,7 +32,6 @@ def register_buyer():
     db.session.commit()
     return jsonify({"msg": "Buyer registered successfully!"}), 201
 
-
 from models import Product, Farmer
 
 @buyer_blueprint.route('/products', methods=['GET'])

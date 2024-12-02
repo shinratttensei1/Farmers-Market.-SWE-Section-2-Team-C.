@@ -13,8 +13,10 @@ import eye from "../assets/icons/eye.png";
 import play from "../assets/icons/play.png";
 import crops from "../assets/icons/crops.png";
 import cart from "../assets/icons/cart.png";
+import chat from "../assets/icons/chat.png";
 
 export default {
+  chat,
   cart,
   play,
   bookmark,

@@ -24,9 +24,7 @@ const SignIn = () => {
       alert("Please fill in all fields.");
       return;
     }
-  
     setSubmitting(true);
-  
     try {
       const payload = {
         login: form.login,
